@@ -27,6 +27,7 @@ import com.lzy.okgo.callback.AbsCallback;
 import com.lzy.okgo.model.Response;
 import com.orhanobut.hawk.Hawk;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -76,6 +77,65 @@ public class ApiConfig {
             }
         }
         return instance;
+    }
+
+    public void saveFavor(LoadConfigCallback callback, String channelName) {
+        try {
+            File cache = new File(App.getInstance().getFilesDir().getAbsolutePath() + "/favor.json");
+            File cacheDir = cache.getParentFile();
+            String json = "{}";
+            if (!cacheDir.exists())
+                cacheDir.mkdirs();
+            if (cache.exists()) {
+                BufferedReader bReader = new BufferedReader(new InputStreamReader(new FileInputStream(cache), "UTF-8"));
+                StringBuilder sb = new StringBuilder();
+                String s = "";
+                while ((s = bReader.readLine()) != null) {
+                    sb.append(s + "\n");
+                }
+                bReader.close();
+                json = sb.toString();
+            }
+            JsonObject favor = new Gson().fromJson(json, JsonObject.class);
+            if(favor.has(channelName)) {
+                boolean flag = favor.get(channelName).getAsBoolean();
+                favor.remove(channelName);
+                favor.addProperty(channelName,!flag);
+            } else {
+                favor.addProperty(channelName,true);
+            }
+            json = favor.toString();
+            FileOutputStream fos = new FileOutputStream(cache);
+            fos.write(json.getBytes("UTF-8"));
+            fos.flush();
+            fos.close();
+            callback.success();
+        } catch (Throwable th) {
+            callback.error(th.getMessage());
+            th.printStackTrace();
+        }
+    }
+
+    public String loadFavor() {
+        File cache = new File(App.getInstance().getFilesDir().getAbsolutePath() + "/favor.json");
+        String json = "{}";
+        if (cache.exists()) {
+            try {
+                BufferedReader bReader = new BufferedReader(new InputStreamReader(new FileInputStream(cache), "UTF-8"));
+                StringBuilder sb = new StringBuilder();
+                String s = "";
+                while ((s = bReader.readLine()) != null) {
+                    sb.append(s + "\n");
+                }
+                bReader.close();
+                json = sb.toString();
+            } catch (Throwable th) {
+                th.printStackTrace();
+            }
+        } else {
+            json = "{\"pppd-875 巨乳女教師的誘惑 川村晴\":\"true\"}";
+        }
+        return json;
     }
 
     public void loadConfig(boolean useCache, LoadConfigCallback callback, Activity activity) {
@@ -344,9 +404,17 @@ public class ApiConfig {
 
     public void loadLives(JsonArray livesArray) {
         liveChannelGroupList.clear();
+        String json = loadFavor();
         int groupIndex = 0;
         int channelIndex = 0;
         int channelNum = 0;
+        int favorChannelIndex = 0;
+        LiveChannelGroup favorChannelGroup = new LiveChannelGroup();
+        favorChannelGroup.setLiveChannels(new ArrayList<LiveChannelItem>());
+        favorChannelGroup.setGroupIndex(groupIndex++);
+        favorChannelGroup.setGroupName("我的收藏");
+        favorChannelGroup.setGroupPassword("");
+        JsonObject favor = new Gson().fromJson(json, JsonObject.class);
         for (JsonElement groupElement : livesArray) {
             LiveChannelGroup liveChannelGroup = new LiveChannelGroup();
             liveChannelGroup.setLiveChannels(new ArrayList<LiveChannelItem>());
@@ -361,8 +429,9 @@ public class ApiConfig {
             channelIndex = 0;
             for (JsonElement channelElement : ((JsonObject) groupElement).get("channels").getAsJsonArray()) {
                 JsonObject obj = (JsonObject) channelElement;
+                String channelName = obj.get("name").getAsString().trim();
                 LiveChannelItem liveChannelItem = new LiveChannelItem();
-                liveChannelItem.setChannelName(obj.get("name").getAsString().trim());
+                liveChannelItem.setChannelName(channelName);
                 liveChannelItem.setChannelIndex(channelIndex++);
                 liveChannelItem.setChannelNum(++channelNum);
                 ArrayList<String> urls = DefaultConfig.safeJsonStringList(obj, "urls");
@@ -380,10 +449,16 @@ public class ApiConfig {
                 }
                 liveChannelItem.setChannelSourceNames(sourceNames);
                 liveChannelItem.setChannelUrls(sourceUrls);
+                if (favor.has(channelName) && favor.get(channelName).getAsBoolean()) {
+                    liveChannelItem.setFavor(favor.get(channelName).getAsBoolean());
+                } else {
+                    liveChannelItem.setFavor(false);
+                }
                 liveChannelGroup.getLiveChannels().add(liveChannelItem);
             }
             liveChannelGroupList.add(liveChannelGroup);
         }
+        liveChannelGroupList.add(0, favorChannelGroup);
     }
 
     public String getSpider() {

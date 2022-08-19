@@ -43,6 +43,7 @@ import com.github.tvbox.osc.util.HawkConfig;
 import com.github.tvbox.osc.util.MD5;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.lzy.okgo.OkGo;
 import com.lzy.okgo.cache.CacheEntity;
 import com.lzy.okgo.cache.CacheMode;
@@ -578,6 +579,7 @@ public class LivePlayActivity extends BaseActivity {
                 mHandler.postDelayed(mHideChannelListRun, 5000);
             }
         });
+        mLiveChannelView.setLongClickable(true);
 
         //电视
         mLiveChannelView.setOnItemListener(new TvRecyclerView.OnItemListener() {
@@ -600,6 +602,34 @@ public class LivePlayActivity extends BaseActivity {
             }
         });
 
+        liveChannelItemAdapter.setOnItemLongClickListener(new BaseQuickAdapter.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(BaseQuickAdapter adapter, View view, int position) {
+                String channelName = liveChannelItemAdapter.getItem(position).getChannelName();
+                Boolean favor = !liveChannelItemAdapter.getItem(position).isFavor();
+                ApiConfig.get().saveFavor(new ApiConfig.LoadConfigCallback() {
+                    @Override
+                    public void success() {
+                        String msg = favor?channelName+"已收藏":channelName+"已取消收藏";
+                        Toast.makeText(App.getInstance(), msg, Toast.LENGTH_SHORT).show();
+                        mHandler.removeCallbacks(mHideChannelListRun);
+                        mHandler.postDelayed(mHideChannelListRun, 5000);
+                    }
+
+                    @Override
+                    public void retry() {
+
+                    }
+
+                    @Override
+                    public void error(String msg) {
+
+                    }
+                },channelName);
+                return true;
+            }
+        });
+
         //手机/模拟器
         liveChannelItemAdapter.setOnItemClickListener(new BaseQuickAdapter.OnItemClickListener() {
             @Override
@@ -608,6 +638,7 @@ public class LivePlayActivity extends BaseActivity {
                 clickLiveChannel(position);
             }
         });
+
     }
 
     private void clickLiveChannel(int position) {
@@ -738,7 +769,7 @@ public class LivePlayActivity extends BaseActivity {
 
     private void clickSettingItem(int position) {
         int settingGroupIndex = liveSettingGroupAdapter.getSelectedGroupIndex();
-        if (settingGroupIndex < 4) {
+        if (settingGroupIndex < 5) {
             if (position == liveSettingItemAdapter.getSelectedItemIndex())
                 return;
             liveSettingItemAdapter.selectItem(position, true, true);
@@ -760,7 +791,7 @@ public class LivePlayActivity extends BaseActivity {
             case 3://超时换源
                 Hawk.put(HawkConfig.LIVE_CONNECT_TIMEOUT, position);
                 break;
-            case 4://超时换源
+            case 4://偏好设置
                 boolean select = false;
                 switch (position) {
                     case 0:
@@ -783,6 +814,12 @@ public class LivePlayActivity extends BaseActivity {
                         break;
                 }
                 liveSettingItemAdapter.selectItem(position, select, false);
+                break;
+            case 5://倍数播放
+                float speed = Float.parseFloat(liveSettingGroupList.get(5).getLiveSettingItems().get(position).getItemName());
+                mController.setPlaySpeed(speed);
+                liveSettingItemAdapter.selectItem(position, true, false);
+                Hawk.put(HawkConfig.LIVE_PLAY_SPEED, position);
                 break;
         }
         mHandler.removeCallbacks(mHideSettingLayoutRun);
@@ -845,7 +882,6 @@ public class LivePlayActivity extends BaseActivity {
                 }
                 liveChannelGroupList.clear();
                 liveChannelGroupList.addAll(list);
-
                 mHandler.post(new Runnable() {
                     @Override
                     public void run() {
@@ -894,19 +930,20 @@ public class LivePlayActivity extends BaseActivity {
     }
 
     private void initLiveSettingGroupList() {
-        ArrayList<String> groupNames = new ArrayList<>(Arrays.asList("线路选择", "画面比例", "播放解码", "超时换源", "偏好设置"));
+        ArrayList<String> groupNames = new ArrayList<>(Arrays.asList("线路选择", "画面比例", "播放解码", "超时换源", "偏好设置","倍数播放"));
         ArrayList<ArrayList<String>> itemsArrayList = new ArrayList<>();
         ArrayList<String> sourceItems = new ArrayList<>();
         ArrayList<String> scaleItems = new ArrayList<>(Arrays.asList("默认", "16:9", "4:3", "填充", "原始", "裁剪"));
         ArrayList<String> playerDecoderItems = new ArrayList<>(Arrays.asList("系统", "ijk硬解", "ijk软解", "exo"));
         ArrayList<String> timeoutItems = new ArrayList<>(Arrays.asList("5s", "10s", "15s", "20s", "25s", "30s"));
         ArrayList<String> personalSettingItems = new ArrayList<>(Arrays.asList("显示时间", "显示网速", "换台反转", "跨选分类"));
+        ArrayList<String> playSpeedItems = new ArrayList<>(Arrays.asList("0.5", "0.75", "1", "1.25","1.5","2.0","2.25","2.5","2.75","3.0"));
         itemsArrayList.add(sourceItems);
         itemsArrayList.add(scaleItems);
         itemsArrayList.add(playerDecoderItems);
         itemsArrayList.add(timeoutItems);
         itemsArrayList.add(personalSettingItems);
-
+        itemsArrayList.add(playSpeedItems);
         liveSettingGroupList.clear();
         for (int i = 0; i < groupNames.size(); i++) {
             LiveSettingGroup liveSettingGroup = new LiveSettingGroup();
@@ -1045,7 +1082,34 @@ public class LivePlayActivity extends BaseActivity {
 
     private ArrayList<LiveChannelItem> getLiveChannels(int groupIndex) {
         if (!isNeedInputPassword(groupIndex)) {
-            return liveChannelGroupList.get(groupIndex).getLiveChannels();
+            String json = ApiConfig.get().loadFavor();
+            JsonObject favor = new Gson().fromJson(json, JsonObject.class);
+            int favorChannelIndex = 0;
+            ArrayList<LiveChannelItem> channelItems = new ArrayList<>();
+            List<LiveChannelGroup> channelGroups = new ArrayList<>();
+            if (groupIndex == 0) {
+                channelGroups = liveChannelGroupList;
+            } else {
+                channelGroups.add(liveChannelGroupList.get(groupIndex));
+            }
+            for (LiveChannelGroup liveChannelGroup : channelGroups) {
+                for (LiveChannelItem liveChannelItem : liveChannelGroup.getLiveChannels()) {
+                    String channelName = liveChannelItem.getChannelName();
+                    if (favor.has(channelName)) {
+                        liveChannelItem.setChannelIndex(favorChannelIndex++);
+                        liveChannelItem.setChannelName(channelName);
+                        liveChannelItem.setFavor(favor.get(channelName).getAsBoolean());
+                        channelItems.add(liveChannelItem);
+                    }
+                    else if(groupIndex != 0) {
+                        liveChannelItem.setChannelIndex(favorChannelIndex++);
+                        liveChannelItem.setChannelName(channelName);
+                        liveChannelItem.setFavor(false);
+                        channelItems.add(liveChannelItem);
+                    }
+                }
+            }
+            return channelItems;
         } else {
             return new ArrayList<>();
         }

@@ -345,4 +345,9 @@ public class LiveController extends BaseController {
         }
         return false;
     }
+
+    //设置倍数播放
+    public void setPlaySpeed(float speed) {
+        mControlWrapper.setSpeed(speed);
+    }
 }

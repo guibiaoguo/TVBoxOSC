@@ -15,6 +15,7 @@ public class LiveChannelItem {
      * channelUrls : 频道源地址
      * sourceIndex : 频道源索引
      * sourceNum : 频道源总数
+     * favor : 是否已收藏
      */
     private int channelIndex;
     private int channelNum;
@@ -23,6 +24,7 @@ public class LiveChannelItem {
     private ArrayList<String> channelUrls;
     public int sourceIndex = 0;
     public int sourceNum = 0;
+    public boolean favor = false;
 
     public void setChannelIndex(int channelIndex) {
         this.channelIndex = channelIndex;
@@ -91,5 +93,17 @@ public class LiveChannelItem {
 
     public String getSourceName() {
         return channelSourceNames.get(sourceIndex);
+    }
+
+    public void setSourceNum(int sourceNum) {
+        this.sourceNum = sourceNum;
+    }
+
+    public boolean isFavor() {
+        return favor;
+    }
+
+    public void setFavor(boolean favor) {
+        this.favor = favor;
     }
 }

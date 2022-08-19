@@ -3,12 +3,31 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/TVBoxOSC/app/src/main/res/drawable/box_controller_top_bg.xml" value="0.1" />
+        <entry key="..\:/TVBoxOSC/app/src/main/res/drawable/button_detail_collect.xml" value="0.1" />
+        <entry key="..\:/TVBoxOSC/app/src/main/res/drawable/button_detail_play.xml" value="0.1" />
+        <entry key="..\:/TVBoxOSC/app/src/main/res/drawable/button_detail_quick_search.xml" value="0.1" />
+        <entry key="..\:/TVBoxOSC/app/src/main/res/drawable/button_detail_sort.xml" value="0.1" />
+        <entry key="..\:/TVBoxOSC/app/src/main/res/drawable/button_dialog_main.xml" value="0.1" />
+        <entry key="..\:/TVBoxOSC/app/src/main/res/drawable/button_home_sort_focus.xml" value="0.1" />
+        <entry key="..\:/TVBoxOSC/app/src/main/res/drawable/icon_collect.xml" value="0.1" />
+        <entry key="..\:/TVBoxOSC/app/src/main/res/drawable/icon_delete.xml" value="0.1" />
+        <entry key="..\:/TVBoxOSC/app/src/main/res/drawable/icon_error.xml" value="0.1" />
+        <entry key="..\:/TVBoxOSC/app/src/main/res/drawable/icon_filter.xml" value="0.1" />
+        <entry key="..\:/TVBoxOSC/app/src/main/res/drawable/icon_history.xml" value="0.1" />
+        <entry key="..\:/TVBoxOSC/app/src/main/res/drawable/icon_live.xml" value="0.1" />
+        <entry key="..\:/TVBoxOSC/app/src/main/res/drawable/icon_push.xml" value="0.1" />
+        <entry key="..\:/TVBoxOSC/app/src/main/res/drawable/icon_search.xml" value="0.1" />
+        <entry key="..\:/TVBoxOSC/app/src/main/res/drawable/icon_setting.xml" value="0.1" />
+        <entry key="..\:/TVBoxOSC/app/src/main/res/drawable/input_dialog_api_input.xml" value="0.1" />
+        <entry key="..\:/TVBoxOSC/app/src/main/res/drawable/input_search.xml" value="0.1" />
         <entry key="..\:/TVBoxOSC/app/src/main/res/layout/activity_collect.xml" value="0.1" />
         <entry key="..\:/TVBoxOSC/app/src/main/res/layout/activity_home.xml" value="0.1" />
-        <entry key="..\:/TVBoxOSC/app/src/main/res/layout/activity_live_play.xml" value="0.140625" />
+        <entry key="..\:/TVBoxOSC/app/src/main/res/layout/activity_live_play.xml" value="0.136" />
         <entry key="..\:/TVBoxOSC/app/src/main/res/layout/activity_play.xml" value="0.140625" />
         <entry key="..\:/TVBoxOSC/app/src/main/res/layout/box_vod_control_view.xml" value="0.4" />
         <entry key="..\:/TVBoxOSC/app/src/main/res/layout/item_live.xml" value="0.1" />
+        <entry key="..\:/TVBoxOSC/app/src/main/res/layout/item_live_channel.xml" value="0.136" />
         <entry key="..\:/TVBoxOSC/app/src/main/res/layout/player_live_control_view.xml" value="0.1" />
         <entry key="..\:/TVBoxOSC/app/src/main/res/layout/player_vod_control_view.xml" value="0.1" />
         <entry key="..\:/android/repository/TVBoxOSC/app/src/main/res/layout/activity_live_play.xml" value="0.1" />
