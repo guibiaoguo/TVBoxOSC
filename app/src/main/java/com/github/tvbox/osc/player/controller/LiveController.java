@@ -247,9 +247,11 @@ public class LiveController extends BaseController {
         int action = event.getAction();
         if (action == KeyEvent.ACTION_DOWN) {
             if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT || keyCode == KeyEvent.KEYCODE_DPAD_LEFT) {
-                if (isInPlayback) {
+                if (isInPlayback && mControlWrapper.getDuration() > 0) {
                     tvSlideStart(keyCode == KeyEvent.KEYCODE_DPAD_RIGHT ? 1 : -1);
                     return true;
+                } else {
+                    listener.changeSource(keyCode == KeyEvent.KEYCODE_DPAD_RIGHT ? 1 : -1);
                 }
             } else if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_ENTER || keyCode == KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE) {
                 if (isInPlayback) {
@@ -264,7 +266,7 @@ public class LiveController extends BaseController {
             }
         } else if (action == KeyEvent.ACTION_UP) {
             if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT || keyCode == KeyEvent.KEYCODE_DPAD_LEFT) {
-                if (isInPlayback) {
+                if (isInPlayback && mControlWrapper.getDuration() > 0) {
                     tvSlideStop();
                     return true;
                 }

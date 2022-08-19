@@ -1,6 +1,7 @@
 package com.github.tvbox.osc.ui.adapter;
 
 import android.graphics.Color;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -42,6 +43,9 @@ public class LiveChannelItemAdapter extends BaseQuickAdapter<LiveChannelItem, Ba
         }
         if(item.isFavor()) {
             imageView.setImageResource(R.drawable.icon_collect);
+            imageView.setVisibility(View.VISIBLE);
+        } else {
+            imageView.setVisibility(View.GONE);
         }
     }
 

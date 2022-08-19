@@ -21,6 +21,7 @@
         android:marqueeRepeatLimit="marquee_forever"
         android:singleLine="true"
         android:textColor="@android:color/white"
+        android:text="19"
         android:textSize="22mm" />
 
     <TextView
@@ -33,18 +34,19 @@
         android:marqueeRepeatLimit="marquee_forever"
         android:singleLine="true"
         android:textColor="@android:color/white"
+        android:text="pppd-875 巨乳女教師的誘惑 川村晴"
         android:textSize="22mm" />
 
     <ImageView
         android:id="@+id/tvChannelIcon"
         android:layout_width="@dimen/vs_35"
-        android:layout_height="@dimen/vs_35"
+        android:layout_height="match_parent"
         android:ellipsize="marquee"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
         android:gravity="center"
         android:marqueeRepeatLimit="marquee_forever"
         android:singleLine="true"
-        android:focusable="false"
-        android:focusableInTouchMode="false"
         tools:src="@drawable/icon_collect" />
 
 </LinearLayout>

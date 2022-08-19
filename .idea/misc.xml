@@ -27,7 +27,7 @@
         <entry key="..\:/TVBoxOSC/app/src/main/res/layout/activity_play.xml" value="0.140625" />
         <entry key="..\:/TVBoxOSC/app/src/main/res/layout/box_vod_control_view.xml" value="0.4" />
         <entry key="..\:/TVBoxOSC/app/src/main/res/layout/item_live.xml" value="0.1" />
-        <entry key="..\:/TVBoxOSC/app/src/main/res/layout/item_live_channel.xml" value="0.136" />
+        <entry key="..\:/TVBoxOSC/app/src/main/res/layout/item_live_channel.xml" value="0.4" />
         <entry key="..\:/TVBoxOSC/app/src/main/res/layout/player_live_control_view.xml" value="0.1" />
         <entry key="..\:/TVBoxOSC/app/src/main/res/layout/player_vod_control_view.xml" value="0.1" />
         <entry key="..\:/android/repository/TVBoxOSC/app/src/main/res/layout/activity_live_play.xml" value="0.1" />

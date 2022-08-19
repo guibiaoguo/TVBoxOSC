@@ -315,6 +315,8 @@ public class LivePlayActivity extends BaseActivity {
             livePlayerManager.getLiveChannelPlayer(mVideoView, currentLiveChannelItem.getChannelName());
         }
         mVideoView.setUrl(currentLiveChannelItem.getUrl());
+        float speed = Float.parseFloat(liveSettingGroupList.get(5).getLiveSettingItems().get(Hawk.get(HawkConfig.LIVE_PLAY_SPEED,1)).getItemName());
+        mController.setPlaySpeed(speed);
         showChannelInfo();
         mVideoView.start();
         return true;
@@ -579,7 +581,7 @@ public class LivePlayActivity extends BaseActivity {
                 mHandler.postDelayed(mHideChannelListRun, 5000);
             }
         });
-        mLiveChannelView.setLongClickable(true);
+//        mLiveChannelView.setLongClickable(true);
 
         //电视
         mLiveChannelView.setOnItemListener(new TvRecyclerView.OnItemListener() {
@@ -612,8 +614,6 @@ public class LivePlayActivity extends BaseActivity {
                     public void success() {
                         String msg = favor?channelName+"已收藏":channelName+"已取消收藏";
                         Toast.makeText(App.getInstance(), msg, Toast.LENGTH_SHORT).show();
-                        mHandler.removeCallbacks(mHideChannelListRun);
-                        mHandler.postDelayed(mHideChannelListRun, 5000);
                     }
 
                     @Override
@@ -626,6 +626,7 @@ public class LivePlayActivity extends BaseActivity {
 
                     }
                 },channelName);
+                showChannelList();
                 return true;
             }
         });
@@ -818,6 +819,7 @@ public class LivePlayActivity extends BaseActivity {
             case 5://倍数播放
                 float speed = Float.parseFloat(liveSettingGroupList.get(5).getLiveSettingItems().get(position).getItemName());
                 mController.setPlaySpeed(speed);
+                liveSettingItemAdapter.selectItem(Hawk.get(HawkConfig.LIVE_PLAY_SPEED, position), false, false);
                 liveSettingItemAdapter.selectItem(position, true, false);
                 Hawk.put(HawkConfig.LIVE_PLAY_SPEED, position);
                 break;
@@ -960,6 +962,7 @@ public class LivePlayActivity extends BaseActivity {
             liveSettingGroupList.add(liveSettingGroup);
         }
         liveSettingGroupList.get(3).getLiveSettingItems().get(Hawk.get(HawkConfig.LIVE_CONNECT_TIMEOUT, 1)).setItemSelected(true);
+        liveSettingGroupList.get(5).getLiveSettingItems().get(Hawk.get(HawkConfig.LIVE_PLAY_SPEED, 1)).setItemSelected(true);
         liveSettingGroupList.get(4).getLiveSettingItems().get(0).setItemSelected(Hawk.get(HawkConfig.LIVE_SHOW_TIME, false));
         liveSettingGroupList.get(4).getLiveSettingItems().get(1).setItemSelected(Hawk.get(HawkConfig.LIVE_SHOW_NET_SPEED, false));
         liveSettingGroupList.get(4).getLiveSettingItems().get(2).setItemSelected(Hawk.get(HawkConfig.LIVE_CHANNEL_REVERSE, false));
@@ -1095,7 +1098,7 @@ public class LivePlayActivity extends BaseActivity {
             for (LiveChannelGroup liveChannelGroup : channelGroups) {
                 for (LiveChannelItem liveChannelItem : liveChannelGroup.getLiveChannels()) {
                     String channelName = liveChannelItem.getChannelName();
-                    if (favor.has(channelName)) {
+                    if (favor.has(channelName) && favor.get(channelName).getAsBoolean()) {
                         liveChannelItem.setChannelIndex(favorChannelIndex++);
                         liveChannelItem.setChannelName(channelName);
                         liveChannelItem.setFavor(favor.get(channelName).getAsBoolean());
