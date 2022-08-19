@@ -5,6 +5,7 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.IntEvaluator;
 import android.animation.ObjectAnimator;
 import android.os.Handler;
+import android.os.Looper;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
@@ -28,7 +29,9 @@ import com.github.tvbox.osc.bean.LiveChannelItem;
 import com.github.tvbox.osc.bean.LivePlayerManager;
 import com.github.tvbox.osc.bean.LiveSettingGroup;
 import com.github.tvbox.osc.bean.LiveSettingItem;
+import com.github.tvbox.osc.cache.CacheManager;
 import com.github.tvbox.osc.player.controller.LiveController;
+import com.github.tvbox.osc.player.controller.VodController;
 import com.github.tvbox.osc.ui.adapter.LiveChannelGroupAdapter;
 import com.github.tvbox.osc.ui.adapter.LiveChannelItemAdapter;
 import com.github.tvbox.osc.ui.adapter.LiveSettingGroupAdapter;
@@ -37,14 +40,22 @@ import com.github.tvbox.osc.ui.dialog.LivePasswordDialog;
 import com.github.tvbox.osc.ui.tv.widget.ViewObj;
 import com.github.tvbox.osc.util.FastClickCheckUtil;
 import com.github.tvbox.osc.util.HawkConfig;
+import com.github.tvbox.osc.util.MD5;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.lzy.okgo.OkGo;
+import com.lzy.okgo.cache.CacheEntity;
+import com.lzy.okgo.cache.CacheMode;
 import com.lzy.okgo.callback.AbsCallback;
+import com.lzy.okgo.https.HttpsUtils;
+import com.lzy.okgo.interceptor.HttpLoggingInterceptor;
 import com.lzy.okgo.model.Response;
 import com.orhanobut.hawk.Hawk;
 import com.owen.tvrecyclerview.widget.TvRecyclerView;
 import com.owen.tvrecyclerview.widget.V7LinearLayoutManager;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -52,7 +63,11 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 
+import okhttp3.OkHttpClient;
+import xyz.doikki.videoplayer.player.ProgressManager;
 import xyz.doikki.videoplayer.player.VideoView;
 
 /**
@@ -87,6 +102,7 @@ public class LivePlayActivity extends BaseActivity {
     private LiveChannelItem currentLiveChannelItem = null;
     private LivePlayerManager livePlayerManager = new LivePlayerManager();
     private ArrayList<Integer> channelGroupPasswordConfirmed = new ArrayList<>();
+    private LiveController mController;
 
     @Override
     protected int getLayoutResID() {
@@ -107,7 +123,6 @@ public class LivePlayActivity extends BaseActivity {
         tvChannelInfo = findViewById(R.id.tvChannel);
         tvTime = findViewById(R.id.tvTime);
         tvNetSpeed = findViewById(R.id.tvNetSpeed);
-
         initVideoView();
         initChannelGroupView();
         initLiveChannelView();
@@ -119,6 +134,9 @@ public class LivePlayActivity extends BaseActivity {
 
     @Override
     public void onBackPressed() {
+        if (mController.onBackPressed()) {
+            return;
+        }
         if (tvLeftChannelListLayout.getVisibility() == View.VISIBLE) {
             mHandler.removeCallbacks(mHideChannelListRun);
             mHandler.post(mHideChannelListRun);
@@ -155,10 +173,12 @@ public class LivePlayActivity extends BaseActivity {
                             playNext();
                         break;
                     case KeyEvent.KEYCODE_DPAD_LEFT:
-                        playPreSource();
-                        break;
+//                        playPreSource();
+//                        mController.onKeyEvent(event);
+//                        break;
                     case KeyEvent.KEYCODE_DPAD_RIGHT:
-                        playNextSource();
+//                        playNextSource();
+                        mController.onKeyEvent(event);
                         break;
                     case KeyEvent.KEYCODE_DPAD_CENTER:
                     case KeyEvent.KEYCODE_ENTER:
@@ -168,6 +188,7 @@ public class LivePlayActivity extends BaseActivity {
                 }
             }
         } else if (event.getAction() == KeyEvent.ACTION_UP) {
+            mController.onKeyEvent(event);
         }
         return super.dispatchKeyEvent(event);
     }
@@ -392,8 +413,33 @@ public class LivePlayActivity extends BaseActivity {
     };
 
     private void initVideoView() {
-        LiveController controller = new LiveController(this);
-        controller.setListener(new LiveController.LiveControlListener() {
+        mController = new LiveController(this);
+        mController.setCanChangePosition(true);
+        mController.setEnableInNormal(true);
+        mController.setGestureEnabled(true);
+        mController.setDoubleTapTogglePlayEnabled(true
+                    );
+        ProgressManager progressManager = new ProgressManager() {
+            @Override
+            public void saveProgress(String url, long progress) {
+                CacheManager.save(MD5.string2MD5(url), progress);
+            }
+
+            @Override
+            public long getSavedProgress(String url) {
+                int st = 0;
+                long skip = st * 1000;
+                if (CacheManager.getCache(MD5.string2MD5(url)) == null) {
+                    return skip;
+                }
+                long rec = (long) CacheManager.getCache(MD5.string2MD5(url));
+                if (rec < skip)
+                    return skip;
+                return rec;
+            }
+        };
+        mVideoView.setProgressManager(progressManager);
+        mController.setListener(new LiveController.LiveControlListener() {
             @Override
             public boolean singleTap() {
                 showChannelList();
@@ -414,7 +460,7 @@ public class LivePlayActivity extends BaseActivity {
                     case VideoView.STATE_PREPARED:
                     case VideoView.STATE_BUFFERED:
                     case VideoView.STATE_PLAYING:
-                        currentLiveChangeSourceTimes = 0;
+                        currentLiveChangeSourceTimes = 7;
                         mHandler.removeCallbacks(mConnectTimeoutChangeSourceRun);
                         break;
                     case VideoView.STATE_ERROR:
@@ -438,12 +484,7 @@ public class LivePlayActivity extends BaseActivity {
                     playPreSource();
             }
         });
-        controller.setCanChangePosition(false);
-        controller.setEnableInNormal(true);
-        controller.setGestureEnabled(true);
-        controller.setDoubleTapTogglePlayEnabled(false);
-        mVideoView.setVideoController(controller);
-        mVideoView.setProgressManager(null);
+        mVideoView.setVideoController(mController);
     }
 
     private Runnable mConnectTimeoutChangeSourceRun = new Runnable() {
@@ -769,7 +810,23 @@ public class LivePlayActivity extends BaseActivity {
     }
 
     public void loadProxyLives(String url) {
-        OkGo.<String>get(url).execute(new AbsCallback<String>() {
+
+        OkHttpClient.Builder builder = new OkHttpClient.Builder();
+        HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor("OkGo");
+        loggingInterceptor.setPrintLevel(HttpLoggingInterceptor.Level.BODY);
+        loggingInterceptor.setColorLevel(Level.INFO);
+        builder.addInterceptor(loggingInterceptor);
+
+        builder.readTimeout(100000, TimeUnit.MILLISECONDS);
+        builder.writeTimeout(100000, TimeUnit.MILLISECONDS);
+        builder.connectTimeout(100000, TimeUnit.MILLISECONDS);
+
+        HttpsUtils.SSLParams sslParams = HttpsUtils.getSslSocketFactory();
+        builder.sslSocketFactory(sslParams.sSLSocketFactory, sslParams.trustManager);
+        builder.hostnameVerifier(HttpsUtils.UnSafeHostnameVerifier);
+        OkHttpClient okHttpClient = builder.build();
+        OkGo.getInstance().setOkHttpClient(okHttpClient).<String>get(url)
+                .execute(new AbsCallback<String>() {
 
             @Override
             public String convertResponse(okhttp3.Response response) throws Throwable {

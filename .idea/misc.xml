@@ -3,6 +3,14 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/TVBoxOSC/app/src/main/res/layout/activity_collect.xml" value="0.1" />
+        <entry key="..\:/TVBoxOSC/app/src/main/res/layout/activity_home.xml" value="0.1" />
+        <entry key="..\:/TVBoxOSC/app/src/main/res/layout/activity_live_play.xml" value="0.140625" />
+        <entry key="..\:/TVBoxOSC/app/src/main/res/layout/activity_play.xml" value="0.140625" />
+        <entry key="..\:/TVBoxOSC/app/src/main/res/layout/box_vod_control_view.xml" value="0.4" />
+        <entry key="..\:/TVBoxOSC/app/src/main/res/layout/item_live.xml" value="0.1" />
+        <entry key="..\:/TVBoxOSC/app/src/main/res/layout/player_live_control_view.xml" value="0.1" />
+        <entry key="..\:/TVBoxOSC/app/src/main/res/layout/player_vod_control_view.xml" value="0.1" />
         <entry key="..\:/android/repository/TVBoxOSC/app/src/main/res/layout/activity_live_play.xml" value="0.1" />
         <entry key="..\:/android/repository/TVBoxOSC/app/src/main/res/layout/item_channel_group_layout.xml" value="0.22826086956521738" />
         <entry key="..\:/android/repository/TVBoxOSC/app/src/main/res/layout/item_live_channel_layout.xml" value="0.22826086956521738" />
@@ -10,7 +18,7 @@
     </option>
   </component>
   <component name="ExternalStorageConfigurationManager" enabled="true" />
-  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" project-jdk-name="11" project-jdk-type="JavaSDK">
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="11" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/build/classes" />
   </component>
   <component name="ProjectType">
