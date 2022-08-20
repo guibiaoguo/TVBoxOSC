@@ -98,6 +98,8 @@ public class VodController extends BaseController {
     TextView mPlayerTimeStartBtn;
     TextView mPlayerTimeSkipBtn;
     TextView mPlayerTimeStepBtn;
+    TextView mPlayerVideoSize;
+    TextView mPlayerVideoUrl;
 
     @Override
     protected void initView() {
@@ -122,7 +124,8 @@ public class VodController extends BaseController {
         mPlayerTimeStartBtn = findViewById(R.id.play_time_start);
         mPlayerTimeSkipBtn = findViewById(R.id.play_time_end);
         mPlayerTimeStepBtn = findViewById(R.id.play_time_step);
-
+        mPlayerVideoSize = findViewById(R.id.tv_video_size);
+        mPlayerVideoUrl = findViewById(R.id.tv_video_url);
         mGridView.setLayoutManager(new V7LinearLayoutManager(getContext(), 0, false));
         ParseAdapter parseAdapter = new ParseAdapter();
         parseAdapter.setOnItemClickListener(new BaseQuickAdapter.OnItemClickListener() {
@@ -373,6 +376,10 @@ public class VodController extends BaseController {
         mPlayTitle.setText(playTitleInfo);
     }
 
+    public void setUrl(String playUrl) {
+        mPlayerVideoUrl.setText(playUrl);
+    }
+
     public void resetSpeed() {
         skipEnd = true;
         mHandler.removeMessages(1004);
@@ -419,6 +426,8 @@ public class VodController extends BaseController {
                 listener.playNext(true);
             }
         }
+        if(mControlWrapper.getVideoSize().length >= 2)
+            mPlayerVideoSize.setText(mControlWrapper.getVideoSize()[0]+" x "+mControlWrapper.getVideoSize()[1]);
         mCurrentTime.setText(PlayerUtils.stringForTime(position));
         mTotalTime.setText(PlayerUtils.stringForTime(duration));
         if (duration > 0) {

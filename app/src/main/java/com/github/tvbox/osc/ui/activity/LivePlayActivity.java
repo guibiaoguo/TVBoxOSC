@@ -81,6 +81,8 @@ public class LivePlayActivity extends BaseActivity {
     private TextView tvChannelInfo;
     private TextView tvTime;
     private TextView tvNetSpeed;
+    private TextView tvVideoSize;
+    private TextView tvVideoUrl;
     private LinearLayout tvLeftChannelListLayout;
     private TvRecyclerView mChannelGroupView;
     private TvRecyclerView mLiveChannelView;
@@ -124,6 +126,9 @@ public class LivePlayActivity extends BaseActivity {
         tvChannelInfo = findViewById(R.id.tvChannel);
         tvTime = findViewById(R.id.tvTime);
         tvNetSpeed = findViewById(R.id.tvNetSpeed);
+        tvVideoSize = findViewById(R.id.tv_video_size);
+        tvVideoUrl = findViewById(R.id.tv_video_url);
+
         initVideoView();
         initChannelGroupView();
         initLiveChannelView();
@@ -463,7 +468,7 @@ public class LivePlayActivity extends BaseActivity {
                     case VideoView.STATE_PREPARED:
                     case VideoView.STATE_BUFFERED:
                     case VideoView.STATE_PLAYING:
-                        currentLiveChangeSourceTimes = 7;
+                        currentLiveChangeSourceTimes = 0;
                         mHandler.removeCallbacks(mConnectTimeoutChangeSourceRun);
                         break;
                     case VideoView.STATE_ERROR:
@@ -486,6 +491,17 @@ public class LivePlayActivity extends BaseActivity {
                 else
                     playPreSource();
             }
+
+            @Override
+            public void setVideoSize(String videoSize) {
+                tvVideoSize.setText(videoSize);
+            }
+
+            @Override
+            public void setVideoUrl() {
+                tvVideoUrl.setText(currentLiveChannelItem.getUrl());
+            }
+
         });
         mVideoView.setVideoController(mController);
     }
@@ -770,7 +786,7 @@ public class LivePlayActivity extends BaseActivity {
 
     private void clickSettingItem(int position) {
         int settingGroupIndex = liveSettingGroupAdapter.getSelectedGroupIndex();
-        if (settingGroupIndex < 5) {
+        if (settingGroupIndex != 4) {
             if (position == liveSettingItemAdapter.getSelectedItemIndex())
                 return;
             liveSettingItemAdapter.selectItem(position, true, true);
@@ -813,14 +829,24 @@ public class LivePlayActivity extends BaseActivity {
                         select = !Hawk.get(HawkConfig.LIVE_CROSS_GROUP, false);
                         Hawk.put(HawkConfig.LIVE_CROSS_GROUP, select);
                         break;
+                    case 4:
+                        select = !Hawk.get(HawkConfig.LIVE_VIDEO_SIZE, false);
+                        Hawk.put(HawkConfig.LIVE_VIDEO_SIZE, select);
+                        showVideoSize();
+                        break;
+                    case 5:
+                        select = !Hawk.get(HawkConfig.LIVE_VIDEO_URL, false);
+                        Hawk.put(HawkConfig.LIVE_VIDEO_URL, select);
+                        showVideoUrl();
+                        break;
                 }
                 liveSettingItemAdapter.selectItem(position, select, false);
                 break;
             case 5://倍数播放
                 float speed = Float.parseFloat(liveSettingGroupList.get(5).getLiveSettingItems().get(position).getItemName());
                 mController.setPlaySpeed(speed);
-                liveSettingItemAdapter.selectItem(Hawk.get(HawkConfig.LIVE_PLAY_SPEED, position), false, false);
-                liveSettingItemAdapter.selectItem(position, true, false);
+//                liveSettingItemAdapter.selectItem(Hawk.get(HawkConfig.LIVE_PLAY_SPEED, position), false, false);
+//                liveSettingItemAdapter.selectItem(position, true, false);
                 Hawk.put(HawkConfig.LIVE_PLAY_SPEED, position);
                 break;
         }
@@ -920,6 +946,8 @@ public class LivePlayActivity extends BaseActivity {
         livePlayerManager.init(mVideoView);
         showTime();
         showNetSpeed();
+        showVideoSize();
+        showVideoUrl();
         tvLeftChannelListLayout.setVisibility(View.INVISIBLE);
         tvRightSettingLayout.setVisibility(View.INVISIBLE);
 
@@ -938,7 +966,7 @@ public class LivePlayActivity extends BaseActivity {
         ArrayList<String> scaleItems = new ArrayList<>(Arrays.asList("默认", "16:9", "4:3", "填充", "原始", "裁剪"));
         ArrayList<String> playerDecoderItems = new ArrayList<>(Arrays.asList("系统", "ijk硬解", "ijk软解", "exo"));
         ArrayList<String> timeoutItems = new ArrayList<>(Arrays.asList("5s", "10s", "15s", "20s", "25s", "30s"));
-        ArrayList<String> personalSettingItems = new ArrayList<>(Arrays.asList("显示时间", "显示网速", "换台反转", "跨选分类"));
+        ArrayList<String> personalSettingItems = new ArrayList<>(Arrays.asList("显示时间", "显示网速", "换台反转", "跨选分类","显示分辨率","显示视频地址"));
         ArrayList<String> playSpeedItems = new ArrayList<>(Arrays.asList("0.5", "0.75", "1", "1.25","1.5","2.0","2.25","2.5","2.75","3.0"));
         itemsArrayList.add(sourceItems);
         itemsArrayList.add(scaleItems);
@@ -967,6 +995,8 @@ public class LivePlayActivity extends BaseActivity {
         liveSettingGroupList.get(4).getLiveSettingItems().get(1).setItemSelected(Hawk.get(HawkConfig.LIVE_SHOW_NET_SPEED, false));
         liveSettingGroupList.get(4).getLiveSettingItems().get(2).setItemSelected(Hawk.get(HawkConfig.LIVE_CHANNEL_REVERSE, false));
         liveSettingGroupList.get(4).getLiveSettingItems().get(3).setItemSelected(Hawk.get(HawkConfig.LIVE_CROSS_GROUP, false));
+        liveSettingGroupList.get(4).getLiveSettingItems().get(4).setItemSelected(Hawk.get(HawkConfig.LIVE_VIDEO_SIZE, false));
+        liveSettingGroupList.get(4).getLiveSettingItems().get(5).setItemSelected(Hawk.get(HawkConfig.LIVE_VIDEO_URL, false));
     }
 
     private void loadCurrentSourceList() {
@@ -988,6 +1018,22 @@ public class LivePlayActivity extends BaseActivity {
         } else {
             mHandler.removeCallbacks(mUpdateTimeRun);
             tvTime.setVisibility(View.GONE);
+        }
+    }
+
+    void showVideoSize() {
+        if (Hawk.get(HawkConfig.LIVE_VIDEO_SIZE, false)) {
+            tvVideoSize.setVisibility(View.VISIBLE);
+        } else {
+            tvVideoSize.setVisibility(View.GONE);
+        }
+    }
+
+    void showVideoUrl() {
+        if (Hawk.get(HawkConfig.LIVE_VIDEO_URL, false)) {
+            tvVideoUrl.setVisibility(View.VISIBLE);
+        } else {
+            tvVideoUrl.setVisibility(View.GONE);
         }
     }
 

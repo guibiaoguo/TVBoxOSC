@@ -112,7 +112,6 @@ public class LiveController extends BaseController {
         mPlayerTimeStartBtn = findViewById(R.id.play_time_start);
         mPlayerTimeSkipBtn = findViewById(R.id.play_time_end);
         mPlayerTimeStepBtn = findViewById(R.id.play_time_step);
-
         mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -160,6 +159,8 @@ public class LiveController extends BaseController {
 //                listener.playNext(true);
             }
         }
+        listener.setVideoSize(getPlayVideoSize());
+        listener.setVideoUrl();
         mCurrentTime.setText(PlayerUtils.stringForTime(position));
         mTotalTime.setText(PlayerUtils.stringForTime(duration));
         if (duration > 0) {
@@ -200,6 +201,10 @@ public class LiveController extends BaseController {
         void playStateChanged(int playState);
 
         void changeSource(int direction);
+
+        void setVideoSize(String videoSize);
+
+        void setVideoUrl();
     }
 
     private LiveController.LiveControlListener listener = null;
@@ -351,5 +356,11 @@ public class LiveController extends BaseController {
     //设置倍数播放
     public void setPlaySpeed(float speed) {
         mControlWrapper.setSpeed(speed);
+    }
+
+    public String getPlayVideoSize() {
+        if (mControlWrapper.getVideoSize().length >=2)
+            return mControlWrapper.getVideoSize()[0] + " x " + mControlWrapper.getVideoSize()[1];
+        return "0 x 0";
     }
 }

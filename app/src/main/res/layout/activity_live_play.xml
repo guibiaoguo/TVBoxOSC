@@ -125,6 +125,32 @@
         android:textSize="22mm"
         android:visibility="gone" />
     <TextView
+        android:id="@+id/tv_video_size"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|center"
+        android:layout_marginTop="5mm"
+        android:layout_marginRight="5mm"
+        android:background="@android:color/transparent"
+        android:gravity="center"
+        android:textColor="@android:color/white"
+        android:textSize="22mm"
+        android:text="1928 x 1080"
+        android:visibility="gone" />
+    <TextView
+        android:id="@+id/tv_video_url"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center"
+        android:layout_marginTop="5mm"
+        android:layout_marginRight="5mm"
+        android:background="@android:color/transparent"
+        android:gravity="center"
+        android:textColor="@android:color/holo_blue_bright"
+        android:textSize="22mm"
+        android:text="https://"
+        android:visibility="gone" />
+    <TextView
         android:id="@+id/tvNetSpeed"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -133,7 +159,7 @@
         android:layout_marginRight="5mm"
         android:background="@android:color/transparent"
         android:gravity="center"
-        android:textColor="@android:color/white"
+        android:textColor="@android:color/holo_blue_bright"
         android:textSize="22mm"
         android:visibility="gone" />
 </FrameLayout>

@@ -460,7 +460,7 @@ public class PlayActivity extends BaseActivity {
         setTip("正在获取播放信息", true, false);
         String playTitleInfo = mVodInfo.name + " " + vs.name;
         mController.setTitle(playTitleInfo);
-
+        mController.setUrl(vs.url);
         playUrl(null, null);
         String progressKey = mVodInfo.sourceKey + mVodInfo.id + mVodInfo.playFlag + mVodInfo.playIndex;
         if (Thunder.play(vs.url, new Thunder.ThunderCallback() {

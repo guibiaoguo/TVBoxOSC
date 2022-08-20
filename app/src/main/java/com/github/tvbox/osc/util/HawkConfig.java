@@ -27,4 +27,6 @@ public class HawkConfig {
     public static final String LIVE_SHOW_NET_SPEED = "live_show_net_speed";
     public static final String LIVE_SHOW_TIME = "live_show_time";
     public static final String LIVE_PLAY_SPEED = "live_play_speed";
+    public static final String LIVE_VIDEO_SIZE = "live_video_size";
+    public static final String LIVE_VIDEO_URL = "live_video_url";
 }
