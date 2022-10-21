@@ -1,5 +1,7 @@
 package com.github.tvbox.osc.util;
 
+import com.orhanobut.hawk.Hawk;
+
 /**
  * @author pj567
  * @date :2020/12/23
@@ -7,6 +9,7 @@ package com.github.tvbox.osc.util;
  */
 public class HawkConfig {
     public static final String API_URL = "api_url";
+    public static final String SHOW_PREVIEW = "show_preview";
     public static final String API_HISTORY = "api_history";
     public static final String HOME_API = "home_api";
     public static final String DEFAULT_PARSE = "parse_default";
@@ -19,14 +22,22 @@ public class HawkConfig {
     public static final String PLAY_TIME_STEP = "play_time_step"; //0 texture 2
     public static final String DOH_URL = "doh_url";
     public static final String HOME_REC = "home_rec"; // 0 豆瓣热播 1 数据源推荐 2 历史
+    public static final String HOME_NUM = "home_num"; // No. of History
     public static final String SEARCH_VIEW = "search_view"; // 0 列表 1 缩略图
+    public static final String STORAGE_DRIVE_SORT = "storage_drive_sort";
     public static final String LIVE_CHANNEL = "last_live_channel_name";
     public static final String LIVE_CHANNEL_REVERSE = "live_channel_reverse";
     public static final String LIVE_CROSS_GROUP = "live_cross_group";
     public static final String LIVE_CONNECT_TIMEOUT = "live_connect_timeout";
     public static final String LIVE_SHOW_NET_SPEED = "live_show_net_speed";
     public static final String LIVE_SHOW_TIME = "live_show_time";
-    public static final String LIVE_PLAY_SPEED = "live_play_speed";
-    public static final String LIVE_VIDEO_SIZE = "live_video_size";
-    public static final String LIVE_VIDEO_URL = "live_video_url";
+    public static final String HOME_SHOW_SOURCE = "show_source";
+    public static final String HOME_LOCALE = "language"; // 0 中文 1 英文
+    public static final String PIC_IN_PIC = "pic_in_pic"; // true = on, false = off
+    public static final String SUBTITLE_TEXT_SIZE = "subtitle_text_size";
+    public static final String SUBTITLE_TIME_DELAY = "subtitle_time_delay";
+
+    public static boolean isDebug(){
+        return Hawk.get(DEBUG_OPEN, false);
+    }
 }

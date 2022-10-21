@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginTop="10mm"
@@ -15,38 +14,39 @@
     <TextView
         android:id="@+id/tvChannelNum"
         android:layout_width="60mm"
-        android:layout_height="60mm"
+        android:layout_height="35mm"
+        android:layout_marginStart="@dimen/vs_10"
+        android:layout_marginLeft="@dimen/vs_10"
+        android:layout_marginEnd="@dimen/vs_10"
+        android:layout_marginRight="@dimen/vs_10"
+        android:background="@drawable/channel_num_bg"
         android:ellipsize="marquee"
         android:gravity="center"
         android:marqueeRepeatLimit="marquee_forever"
+        android:shadowDx="0"
+        android:shadowDy="0"
+        android:shadowRadius="2"
         android:singleLine="true"
         android:textColor="@android:color/white"
-        android:text="19"
-        android:textSize="22mm" />
+        android:textSize="24mm"
+        android:textStyle="bold" />
 
     <TextView
         android:id="@+id/tvChannelName"
         android:layout_width="0mm"
         android:layout_height="60mm"
+        android:layout_marginStart="@dimen/vs_10"
+        android:layout_marginLeft="@dimen/vs_10"
+        android:layout_marginEnd="@dimen/vs_10"
+        android:layout_marginRight="@dimen/vs_10"
         android:layout_weight="1"
         android:ellipsize="marquee"
-        android:gravity="left"
+        android:gravity="left|center_vertical"
         android:marqueeRepeatLimit="marquee_forever"
+        android:shadowDx="0"
+        android:shadowDy="0"
+        android:shadowRadius="2"
         android:singleLine="true"
         android:textColor="@android:color/white"
-        android:text="pppd-875 巨乳女教師的誘惑 川村晴"
         android:textSize="22mm" />
-
-    <ImageView
-        android:id="@+id/tvChannelIcon"
-        android:layout_width="@dimen/vs_35"
-        android:layout_height="match_parent"
-        android:ellipsize="marquee"
-        android:focusable="false"
-        android:focusableInTouchMode="false"
-        android:gravity="center"
-        android:marqueeRepeatLimit="marquee_forever"
-        android:singleLine="true"
-        tools:src="@drawable/icon_collect" />
-
 </LinearLayout>

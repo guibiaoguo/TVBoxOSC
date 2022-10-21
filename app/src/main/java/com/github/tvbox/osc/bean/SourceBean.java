@@ -12,7 +12,9 @@ public class SourceBean {
     private int filterable; // 可筛选?
     private String playerUrl; // 站点解析Url
     private String ext; // 扩展数据
+    private String jar; // 自定义jar
     private ArrayList<String> categories = null; // 分类&排序
+    private int playerType; // 0 system 1 ikj 2 exo 10 mxplayer -1 以参数设置页面的为准
 
     public String getKey() {
         return key;
@@ -92,5 +94,21 @@ public class SourceBean {
 
     public void setCategories(ArrayList<String> categories) {
         this.categories = categories;
+    }
+
+    public String getJar() {
+        return jar;
+    }
+
+    public void setJar(String jar) {
+        this.jar = jar;
+    }
+
+    public int getPlayerType() {
+        return playerType;
+    }
+
+    public void setPlayerType(int playerType) {
+        this.playerType = playerType;
     }
 }

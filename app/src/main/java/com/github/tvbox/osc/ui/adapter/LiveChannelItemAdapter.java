@@ -29,24 +29,24 @@ public class LiveChannelItemAdapter extends BaseQuickAdapter<LiveChannelItem, Ba
     protected void convert(BaseViewHolder holder, LiveChannelItem item) {
         TextView tvChannelNum = holder.getView(R.id.tvChannelNum);
         TextView tvChannel = holder.getView(R.id.tvChannelName);
-        ImageView imageView = holder.getView(R.id.tvChannelIcon);
+//        ImageView imageView = holder.getView(R.id.tvChannelIcon);
         tvChannelNum.setText(String.format("%s", item.getChannelNum()));
         tvChannel.setText(item.getChannelName());
         int channelIndex = item.getChannelIndex();
         if (channelIndex == selectedChannelIndex && channelIndex != focusedChannelIndex) {
-            tvChannelNum.setTextColor(mContext.getResources().getColor(R.color.color_1890FF));
-            tvChannel.setTextColor(mContext.getResources().getColor(R.color.color_1890FF));
+            tvChannelNum.setTextColor(mContext.getResources().getColor(R.color.color_FF0057));
+            tvChannel.setTextColor(mContext.getResources().getColor(R.color.color_FF0057));
         }
         else{
             tvChannelNum.setTextColor(Color.WHITE);
             tvChannel.setTextColor(Color.WHITE);
         }
-        if(item.isFavor()) {
-            imageView.setImageResource(R.drawable.icon_collect);
-            imageView.setVisibility(View.VISIBLE);
-        } else {
-            imageView.setVisibility(View.GONE);
-        }
+//        if(item.isFavor()) {
+//            imageView.setImageResource(R.drawable.icon_collect);
+//            imageView.setVisibility(View.VISIBLE);
+//        } else {
+//            imageView.setVisibility(View.GONE);
+//        }
     }
 
     public void setSelectedChannelIndex(int selectedChannelIndex) {

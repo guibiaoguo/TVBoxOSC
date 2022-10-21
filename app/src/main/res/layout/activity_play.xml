@@ -6,7 +6,7 @@
     android:background="@android:color/black">
 
 
-    <xyz.doikki.videoplayer.player.VideoView
+    <com.github.tvbox.osc.player.MyVideoView
         android:id="@+id/mVideoView"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
@@ -38,7 +38,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:layout_marginTop="@dimen/vs_50"
-        android:text="1111111111111"
+        android:text="Now Loading"
         android:textColor="@color/color_CCFFFFFF"
         android:textSize="@dimen/ts_24" />
 </FrameLayout>
