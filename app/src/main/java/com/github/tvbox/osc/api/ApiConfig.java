@@ -440,6 +440,8 @@ public class ApiConfig {
         favorChannelGroup.setGroupIndex(groupIndex++);
         favorChannelGroup.setGroupName("我的收藏");
         favorChannelGroup.setGroupPassword("");
+        favorChannelGroup.setLiveChannels(new ArrayList<>());
+        favorChannelGroup.getLiveChannels().add(new LiveChannelItem());
         JsonObject favor = new Gson().fromJson(json, JsonObject.class);
         for (JsonElement groupElement : livesArray) {
             LiveChannelGroup liveChannelGroup = new LiveChannelGroup();
@@ -484,7 +486,7 @@ public class ApiConfig {
             }
             liveChannelGroupList.add(liveChannelGroup);
         }
-//        liveChannelGroupList.add(0, favorChannelGroup);
+        liveChannelGroupList.add(0, favorChannelGroup);
     }
 
     public String getSpider() {

@@ -765,7 +765,10 @@ public class PlayFragment extends BaseLazyFragment {
                                 headers = new HashMap<>();
                             }
                             headers.put("referer","https://www.aliyundrive.com/");
-//                            setSubtitle(playInfo.optString("subtitle"));
+                            if (playInfo.has("subtitle")) {
+                                setSubtitle(playInfo.optString("subtitle"));
+//                                initSubtitleView();
+                            }
                             mController.setSwithName(nameList.optString(switchIndex));
                         }
                         if (parse || jx) {

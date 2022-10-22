@@ -173,4 +173,24 @@ public class RoomDataManger {
     public static void deleteDrive(int id) {
         AppDataManager.get().getStorageDriveDao().delete(id);
     }
+
+    public static void insertLiveCollect(LiveCollect record) {
+        AppDataManager.get().getLiveCollectDao().insert(record);
+    }
+
+    public static void deleteLiveCollect(int id) {
+        AppDataManager.get().getLiveCollectDao().delete(id);
+    }
+
+    public static void deleteLiveCollect(String name) {
+        AppDataManager.get().getLiveCollectDao().delete(name);
+    }
+
+    public static LiveCollect getLiveCollect(String name) {
+        return AppDataManager.get().getLiveCollectDao().getLiveCollect(name);
+    }
+
+    public static List<LiveCollect> getAllLiveCollect() {
+        return AppDataManager.get().getLiveCollectDao().getAll();
+    }
 }
