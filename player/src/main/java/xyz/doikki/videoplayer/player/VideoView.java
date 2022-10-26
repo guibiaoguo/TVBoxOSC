@@ -12,6 +12,7 @@ import android.os.Build;
 import android.os.Parcelable;
 import android.text.TextUtils;
 import android.util.AttributeSet;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,6 +23,14 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.github.tvbox.osc.player.R;
+import com.google.android.exoplayer2.Player;
+import com.google.android.exoplayer2.source.TrackGroup;
+import com.google.android.exoplayer2.source.TrackGroupArray;
+import com.google.android.exoplayer2.text.CueGroup;
+import com.google.android.exoplayer2.trackselection.MappingTrackSelector;
+import com.google.android.exoplayer2.trackselection.TrackSelectionParameters;
+import com.google.android.exoplayer2.trackselection.TrackSelector;
+import com.google.android.exoplayer2.ui.SubtitleView;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -30,6 +39,7 @@ import java.util.Map;
 
 import xyz.doikki.videoplayer.controller.BaseVideoController;
 import xyz.doikki.videoplayer.controller.MediaPlayerControl;
+import xyz.doikki.videoplayer.exo.ExoMediaPlayer;
 import xyz.doikki.videoplayer.render.IRenderView;
 import xyz.doikki.videoplayer.render.RenderViewFactory;
 import xyz.doikki.videoplayer.util.L;
@@ -41,7 +51,7 @@ import xyz.doikki.videoplayer.util.PlayerUtils;
  */
 
 public class VideoView<P extends AbstractPlayer> extends FrameLayout
-        implements MediaPlayerControl, AbstractPlayer.PlayerEventListener {
+        implements MediaPlayerControl, AbstractPlayer.PlayerEventListener, Player.Listener {
 
     protected P mMediaPlayer;//播放器
     protected PlayerFactory<P> mPlayerFactory;//工厂类，用于实例化播放核心
@@ -70,6 +80,8 @@ public class VideoView<P extends AbstractPlayer> extends FrameLayout
 
     //--------- data sources ---------//
     protected String mUrl;//当前播放视频的地址
+    protected String mSubtitle;//当前播放视频的字幕地址
+    protected String mSubtitleName;//当前播放视频的字幕地址
     protected String mProgressKey = null;
     protected Map<String, String> mHeaders;//当前视频地址的请求头
     protected AssetFileDescriptor mAssetFileDescriptor;//assets文件
@@ -116,6 +128,16 @@ public class VideoView<P extends AbstractPlayer> extends FrameLayout
      */
     @Nullable
     protected ProgressManager mProgressManager;
+
+    private SubtitleView mSubtitleView;
+
+    public void setSubtitleView(SubtitleView subtitleView) {
+        this.mSubtitleView = subtitleView;
+    }
+
+    public SubtitleView getmSubtitleView() {
+        return mSubtitleView;
+    }
 
     /**
      * 循环播放
@@ -191,7 +213,6 @@ public class VideoView<P extends AbstractPlayer> extends FrameLayout
 
     /**
      * 第一次播放
-     *
      * @return 是否成功开始播放
      */
     protected boolean startPlay() {
@@ -245,6 +266,11 @@ public class VideoView<P extends AbstractPlayer> extends FrameLayout
     protected void initPlayer() {
         mMediaPlayer = mPlayerFactory.createPlayer(getContext());
         mMediaPlayer.setPlayerEventListener(this);
+        if (mMediaPlayer instanceof ExoMediaPlayer) {
+            ((ExoMediaPlayer)mMediaPlayer).setListener(this);
+            if (!TextUtils.isEmpty(mSubtitle))
+                ((ExoMediaPlayer)mMediaPlayer).setTextSource(mSubtitle,mSubtitleName,mHeaders);
+        }
         setInitOptions();
         mMediaPlayer.initPlayer();
         setOptions();
@@ -300,7 +326,6 @@ public class VideoView<P extends AbstractPlayer> extends FrameLayout
 
     /**
      * 设置播放数据
-     *
      * @return 播放数据是否设置成功
      */
     protected boolean prepareDataSource() {
@@ -528,6 +553,21 @@ public class VideoView<P extends AbstractPlayer> extends FrameLayout
         if (mCurrentPosition > 0) {
             seekTo(mCurrentPosition);
         }
+        if (mMediaPlayer instanceof ExoMediaPlayer) {
+            ExoMediaPlayer player = ((ExoMediaPlayer) mMediaPlayer);
+            TrackSelector trackSelector = player.getTrackSelector();
+            MappingTrackSelector.MappedTrackInfo mappedTrackInfo = ((ExoMediaPlayer)mMediaPlayer).getTrackSelector().getCurrentMappedTrackInfo();
+            TrackGroupArray rendererTrackGroups = mappedTrackInfo.getTrackGroups(0);
+            TrackGroup trackGroup = rendererTrackGroups.get(0);
+            System.out.println("####### " + trackGroup.getFormat(0).toString() + " #######");
+            String textLanguage = "zh-cn";
+
+            TrackSelectionParameters parameters = trackSelector.getParameters().buildUpon()
+                    .setForceHighestSupportedBitrate(true)
+//                                        .setSelectUndeterminedTextLanguage(true)
+                    .setPreferredTextLanguage(textLanguage).build();
+            trackSelector.setParameters(parameters);
+        }
     }
 
     /**
@@ -631,6 +671,27 @@ public class VideoView<P extends AbstractPlayer> extends FrameLayout
     public void setUrl(String url, Map<String, String> headers) {
         mAssetFileDescriptor = null;
         mUrl = url;
+        mHeaders = headers;
+    }
+
+    /**
+     * 设置视频字幕
+     */
+    public void setSubtitle(String subtitle,String subtitleName) {
+        setSubtitle(subtitle,subtitleName, null);
+    }
+
+    /**
+     * 设置包含请求头信息的视频字幕
+     *
+     * @param subtitle     字幕地址
+     * @param subtitleName 字幕名字
+     * @param headers 请求头
+     */
+    public void setSubtitle(String subtitle, String subtitleName,Map<String, String> headers) {
+        mAssetFileDescriptor = null;
+        mSubtitle = subtitle;
+        mSubtitleName = subtitleName;
         mHeaders = headers;
     }
 
@@ -1009,7 +1070,6 @@ public class VideoView<P extends AbstractPlayer> extends FrameLayout
      */
     public interface OnStateChangeListener {
         void onPlayerStateChanged(int playerState);
-
         void onPlayStateChanged(int playState);
     }
 
@@ -1018,12 +1078,9 @@ public class VideoView<P extends AbstractPlayer> extends FrameLayout
      */
     public static class SimpleOnStateChangeListener implements OnStateChangeListener {
         @Override
-        public void onPlayerStateChanged(int playerState) {
-        }
-
+        public void onPlayerStateChanged(int playerState) {}
         @Override
-        public void onPlayStateChanged(int playState) {
-        }
+        public void onPlayStateChanged(int playState) {}
     }
 
     /**
@@ -1080,5 +1137,17 @@ public class VideoView<P extends AbstractPlayer> extends FrameLayout
         //activity切到后台后可能被系统回收，故在此处进行进度保存
         saveProgress();
         return super.onSaveInstanceState();
+    }
+
+    @Override
+    public void onCues(CueGroup cueGroup) {
+        if (mSubtitleView != null) {
+            if (this.getWidth() < 900) {
+                mSubtitleView.setFixedTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
+            } else {
+                mSubtitleView.setFixedTextSize(TypedValue.COMPLEX_UNIT_DIP, 24);
+            }
+            mSubtitleView.setCues(cueGroup.cues);
+        }
     }
 }

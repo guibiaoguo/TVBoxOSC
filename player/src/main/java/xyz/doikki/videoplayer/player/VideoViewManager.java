@@ -2,9 +2,9 @@ package xyz.doikki.videoplayer.player;
 
 import android.app.Application;
 
-import xyz.doikki.videoplayer.util.L;
-
 import java.util.LinkedHashMap;
+
+import xyz.doikki.videoplayer.util.L;
 
 /**
  * 视频播放器管理器，管理当前正在播放的VideoView，以及播放器配置

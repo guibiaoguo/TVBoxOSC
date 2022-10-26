@@ -7,19 +7,21 @@ import android.view.SurfaceHolder;
 
 import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.DefaultRenderersFactory;
-import com.google.android.exoplayer2.ExoPlaybackException;
+import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.LoadControl;
+import com.google.android.exoplayer2.PlaybackException;
 import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.RenderersFactory;
-import com.google.android.exoplayer2.SimpleExoPlayer;
-import com.google.android.exoplayer2.analytics.AnalyticsCollector;
+import com.google.android.exoplayer2.analytics.DefaultAnalyticsCollector;
 import com.google.android.exoplayer2.source.DefaultMediaSourceFactory;
 import com.google.android.exoplayer2.source.MediaSource;
+import com.google.android.exoplayer2.source.MergingMediaSource;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.trackselection.MappingTrackSelector;
 import com.google.android.exoplayer2.trackselection.TrackSelector;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
+import com.google.android.exoplayer2.upstream.SlidingPercentile;
 import com.google.android.exoplayer2.util.Clock;
 import com.google.android.exoplayer2.util.EventLogger;
 import com.google.android.exoplayer2.video.VideoSize;
@@ -33,8 +35,9 @@ import xyz.doikki.videoplayer.player.VideoViewManager;
 public class ExoMediaPlayer extends AbstractPlayer implements Player.Listener {
 
     protected Context mAppContext;
-    protected SimpleExoPlayer mInternalPlayer;
+    protected ExoPlayer mInternalPlayer;
     protected MediaSource mMediaSource;
+    protected MediaSource mTextSource;
     protected ExoMediaSourceHelper mMediaSourceHelper;
 
     private PlaybackParameters mSpeedPlaybackParameters;
@@ -45,21 +48,32 @@ public class ExoMediaPlayer extends AbstractPlayer implements Player.Listener {
     private RenderersFactory mRenderersFactory;
     private MappingTrackSelector mTrackSelector;
 
+    private DefaultBandwidthMeter defaultBandwidthMeter;
+    private Player.Listener listener;
+
+    private SlidingPercentile mVideoSlidingPercentile = new SlidingPercentile(3000);
+
+
     public ExoMediaPlayer(Context context) {
         mAppContext = context.getApplicationContext();
         mMediaSourceHelper = ExoMediaSourceHelper.getInstance(context);
     }
 
+    public void setListener(Player.Listener listener) {
+        this.listener = listener;
+    }
+
     @Override
     public void initPlayer() {
-        mInternalPlayer = new SimpleExoPlayer.Builder(
+        defaultBandwidthMeter = DefaultBandwidthMeter.getSingletonInstance(mAppContext);
+        mInternalPlayer = new ExoPlayer.Builder(
                 mAppContext,
                 mRenderersFactory == null ? mRenderersFactory = new DefaultRenderersFactory(mAppContext) : mRenderersFactory,
-                mTrackSelector == null ? mTrackSelector = new DefaultTrackSelector(mAppContext) : mTrackSelector,
                 new DefaultMediaSourceFactory(mAppContext),
+                mTrackSelector == null ? mTrackSelector = new DefaultTrackSelector(mAppContext) : mTrackSelector,
                 mLoadControl == null ? mLoadControl = new DefaultLoadControl() : mLoadControl,
-                DefaultBandwidthMeter.getSingletonInstance(mAppContext),
-                new AnalyticsCollector(Clock.DEFAULT))
+                defaultBandwidthMeter,
+                new DefaultAnalyticsCollector(Clock.DEFAULT))
                 .build();
         setOptions();
 
@@ -67,16 +81,14 @@ public class ExoMediaPlayer extends AbstractPlayer implements Player.Listener {
         if (VideoViewManager.getConfig().mIsEnableLog && mTrackSelector instanceof MappingTrackSelector) {
             mInternalPlayer.addAnalyticsListener(new EventLogger((MappingTrackSelector) mTrackSelector, "ExoPlayer"));
         }
-
+        if (listener != null) {
+            mInternalPlayer.addListener(listener);
+        }
         mInternalPlayer.addListener(this);
     }
 
     public void setTrackSelector(MappingTrackSelector trackSelector) {
         mTrackSelector = trackSelector;
-    }
-
-    public MappingTrackSelector getTrackSelector() {
-        return mTrackSelector;
     }
 
     public void setRenderersFactory(RenderersFactory renderersFactory) {
@@ -90,6 +102,16 @@ public class ExoMediaPlayer extends AbstractPlayer implements Player.Listener {
     @Override
     public void setDataSource(String path, Map<String, String> headers) {
         mMediaSource = mMediaSourceHelper.getMediaSource(path, headers);
+    }
+
+    /**
+     * 设置字幕
+     *
+     * @param subtitle 字幕
+     * @param headers  播放地址请求头
+     */
+    public void setTextSource(String subtitle, String name, Map<String, String> headers) {
+        mTextSource = mMediaSourceHelper.getTextSource(subtitle, name, headers);
     }
 
     @Override
@@ -127,7 +149,12 @@ public class ExoMediaPlayer extends AbstractPlayer implements Player.Listener {
             mInternalPlayer.setPlaybackParameters(mSpeedPlaybackParameters);
         }
         mIsPreparing = true;
-        mInternalPlayer.setMediaSource(mMediaSource);
+        if (mTextSource != null) {
+            MergingMediaSource mergedSource = new MergingMediaSource(mMediaSource, mTextSource);
+            mInternalPlayer.setMediaSource(mergedSource);
+        } else {
+            mInternalPlayer.setMediaSource(mMediaSource);
+        }
         mInternalPlayer.prepare();
     }
 
@@ -247,8 +274,21 @@ public class ExoMediaPlayer extends AbstractPlayer implements Player.Listener {
 
     @Override
     public long getTcpSpeed() {
+        if (defaultBandwidthMeter != null)
         // no support
+            return defaultBandwidthMeter.getBitrateEstimate();
         return 0;
+    }
+
+    /**
+     * @data:Long 下载数据量 = 下载速度 * 下载耗时
+     * @value:Long 下载数据量的速度
+     */
+    public void addSpeedSample(long data,long value) {
+        //这里的数据量是下载累加的，这里会对数据量做开根号处理
+        //当采集到达：data = 9000000 ≈ 900k，开根号= 3000，这个时候窗口开始滑动
+        int weight = (int) Math.sqrt(data);
+        mVideoSlidingPercentile.addSample(weight, value);
     }
 
     @Override
@@ -272,11 +312,13 @@ public class ExoMediaPlayer extends AbstractPlayer implements Player.Listener {
             case Player.STATE_ENDED:
                 mPlayerEventListener.onCompletion();
                 break;
+            case Player.STATE_IDLE:
+                break;
         }
     }
 
     @Override
-    public void onPlayerError(ExoPlaybackException error) {
+    public void onPlayerError(PlaybackException error) {
         if (mPlayerEventListener != null) {
             mPlayerEventListener.onError();
         }
@@ -290,5 +332,9 @@ public class ExoMediaPlayer extends AbstractPlayer implements Player.Listener {
                 mPlayerEventListener.onInfo(MEDIA_INFO_VIDEO_ROTATION_CHANGED, videoSize.unappliedRotationDegrees);
             }
         }
+    }
+
+    public MappingTrackSelector getTrackSelector() {
+        return mTrackSelector;
     }
 }

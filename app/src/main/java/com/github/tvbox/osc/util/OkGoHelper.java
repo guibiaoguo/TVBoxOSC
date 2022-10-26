@@ -27,7 +27,7 @@ import okhttp3.Cache;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.dnsoverhttps.DnsOverHttps;
-import okhttp3.internal.Version;
+//import okhttp3.internal.Version;
 import xyz.doikki.videoplayer.exo.ExoMediaSourceHelper;
 
 public class OkGoHelper {
@@ -58,7 +58,7 @@ public class OkGoHelper {
         }
         builder.dns(dnsOverHttps);
 
-        ExoMediaSourceHelper.getInstance(App.getInstance()).setOkClient(builder.build());
+        ExoMediaSourceHelper.getInstance(App.getInstance());
     }
 
     public static DnsOverHttps dnsOverHttps = null;
@@ -147,7 +147,7 @@ public class OkGoHelper {
             th.printStackTrace();
         }
 
-        HttpHeaders.setUserAgent(Version.userAgent());
+//        HttpHeaders.setUserAgent(Version.userAgent());
 
         OkHttpClient okHttpClient = builder.build();
         OkGo.getInstance().setOkHttpClient(okHttpClient);
