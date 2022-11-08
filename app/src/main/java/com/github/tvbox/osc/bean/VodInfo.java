@@ -160,6 +160,9 @@ public class VodInfo implements Serializable {
 
         public String name;
         public String url;
+        public String subtitle;
+        public String subtitleName;
+
         public boolean selected;
 
         public VodSeries() {
@@ -168,6 +171,12 @@ public class VodInfo implements Serializable {
         public VodSeries(String name, String url) {
             this.name = name;
             this.url = url;
+        }
+
+        public VodSeries(String name, String url,String subtitle) {
+            this.name = name;
+            this.url = url;
+            this.subtitle = subtitle;
         }
     }
 }

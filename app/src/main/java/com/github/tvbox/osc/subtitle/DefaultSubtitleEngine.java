@@ -6,6 +6,7 @@ import android.os.Message;
 import androidx.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.github.tvbox.osc.base.App;
 import com.github.tvbox.osc.cache.CacheManager;
@@ -96,6 +97,7 @@ public class DefaultSubtitleEngine implements SubtitleEngine {
                 } else {
                     CacheManager.save(MD5.string2MD5(getPlaySubtitleCacheKey() != null ?getPlaySubtitleCacheKey(): path), path);
                 }
+                Toast.makeText(App.getInstance(), "字幕加载成功", Toast.LENGTH_SHORT).show();
             }
 
             @Override

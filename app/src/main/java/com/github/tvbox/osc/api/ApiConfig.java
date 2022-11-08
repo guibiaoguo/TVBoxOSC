@@ -58,6 +58,7 @@ public class ApiConfig {
     private List<LiveChannelGroup> liveChannelGroupList;
     private List<ParseBean> parseBeanList;
     private List<String> vipParseFlags;
+    private List<String> badVideos;
     private List<IJKCode> ijkCodes;
     private String spider = null;
     public String wallpaper = "";
@@ -332,6 +333,8 @@ public class ApiConfig {
         }
         // 需要使用vip解析的flag
         vipParseFlags = DefaultConfig.safeJsonStringList(infoJson, "flags");
+        // 需要过滤掉视频地址
+        badVideos = DefaultConfig.safeJsonStringList(infoJson, "badVideos");
         // 解析地址
         // takagen99 : Fix to not repeat appending
         if (parseBeanList.size() == 0) {
@@ -585,6 +588,10 @@ public class ApiConfig {
 
     public List<String> getVipParseFlags() {
         return vipParseFlags;
+    }
+
+    public List<String> getBadVideos() {
+        return badVideos;
     }
 
     public SourceBean getHomeSourceBean() {

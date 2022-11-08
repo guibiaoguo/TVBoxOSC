@@ -121,4 +121,8 @@ public class DriveFolderFile {
         }catch (Exception ex) {}
         return null;
     }
+
+    public boolean isFile() {
+        return isFile;
+    }
 }

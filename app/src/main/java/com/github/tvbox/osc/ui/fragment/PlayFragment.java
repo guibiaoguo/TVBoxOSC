@@ -83,6 +83,7 @@ import com.lzy.okgo.model.Response;
 import com.obsez.android.lib.filechooser.ChooserDialog;
 import com.orhanobut.hawk.Hawk;
 
+import org.apache.commons.lang3.StringUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
@@ -269,7 +270,6 @@ public class PlayFragment extends BaseLazyFragment {
             mController.mSubtitleView.setVisibility(View.GONE);
             mController.mSubtitleView.setSubtitlePath(path);
             mController.mSubtitleView.setVisibility(View.VISIBLE);
-            Toast.makeText(mContext, "字幕加载成功", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -700,11 +700,12 @@ public class PlayFragment extends BaseLazyFragment {
                             }
                             if (playerType == 1) {
                                 mVideoView.getmSubtitleView().setVisibility(View.GONE);
-                                mController.mSubtitleView.destroy();
-                                mController.mSubtitleView.clearSubtitleCache();
-                                mController.mSubtitleView.isInternal = true;
-                                mController.mSubtitleView.setVisibility(View.VISIBLE);
-                                setSubtitle(playSubtitle);
+//                                mController.mSubtitleView.destroy();
+//                                mController.mSubtitleView.clearSubtitleCache();
+//                                mController.mSubtitleView.isInternal = true;
+//                                mController.mSubtitleView.setVisibility(View.VISIBLE);
+                                if (StringUtils.isNotEmpty(playSubtitle))
+                                    setSubtitle(playSubtitle);
                             } else if (playerType == 2) {
                                 mVideoView.getmSubtitleView().setVisibility(View.VISIBLE);
                                 mController.mSubtitleView.destroy();
@@ -1446,6 +1447,10 @@ public class PlayFragment extends BaseLazyFragment {
     }
 
     boolean checkVideoFormat(String url) {
+        System.out.println(url);
+        if (DefaultConfig.isBadVideo(url)) {
+            return false;
+        }
         if (sourceBean.getType() == 3) {
             Spider sp = ApiConfig.get().getCSP(sourceBean);
             if (sp != null && sp.manualVideoCheck())

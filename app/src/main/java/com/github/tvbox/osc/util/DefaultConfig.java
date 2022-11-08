@@ -121,6 +121,9 @@ public class DefaultConfig {
         return false;
     }
 
+    public static boolean isBadVideo(String url) {
+        return ApiConfig.get().getBadVideos().contains(url);
+    }
 
     public static String safeJsonString(JsonObject obj, String key, String defaultVal) {
         try {
