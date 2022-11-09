@@ -207,6 +207,8 @@ public class VodController extends BaseController {
     LinearLayout mTopRoot;
     TextView mPlayTitle;
     TextView mPlayerResolution;
+    LinearLayout mSpeedHidell;
+    LinearLayout mSpeedll;
 
     // pause container
     FrameLayout mProgressTop;
@@ -274,6 +276,8 @@ public class VodController extends BaseController {
         mTopRoot = findViewById(R.id.top_container);
         mPlayTitle = findViewById(R.id.tv_title_top);
         mPlayerResolution = findViewById(R.id.tv_resolution);
+        mSpeedHidell = findViewById(R.id.tv_speed_top_hide);
+        mSpeedll = findViewById(R.id.tv_speed_top);
 
         // pause container
         mProgressTop = findViewById(R.id.tv_pause_container);
@@ -543,9 +547,9 @@ public class VodController extends BaseController {
                 try {
                     int defaultPos = mPlayerConfig.getInt("pl");
                     ArrayList<Integer> players = new ArrayList<>();
-                    players.add(0);
-                    players.add(1);
-                    players.add(2);
+                    players.add(0);  // System
+                    players.add(1);  // IJK
+                    players.add(2);  // Exo
                     if (mxPlayerExist) {
                         players.add(10);
                     }
@@ -664,12 +668,18 @@ public class VodController extends BaseController {
                 mHandler.removeCallbacks(mHideBottomRunnable);
                 mHandler.postDelayed(mHideBottomRunnable, 10000);
                 try {
-                    int step = Hawk.get(HawkConfig.PLAY_TIME_STEP, 5);
-                    int st = mPlayerConfig.getInt("st");
-                    st += step;
-                    if (st > 60 * 10)
-                        st = 0;
-                    mPlayerConfig.put("st", st);
+//                    int step = Hawk.get(HawkConfig.PLAY_TIME_STEP, 5);
+//                    int st = mPlayerConfig.getInt("st");
+//                    st += step;
+//                    if (st > 60 * 10)
+//                        st = 0;          600 = 10 mins
+
+                    // takagen99: Reference FongMi to get exact opening skip time
+                    int current = (int) mControlWrapper.getCurrentPosition();
+                    int duration = (int) mControlWrapper.getDuration();
+                    if (current > duration / 2) return;
+                    mPlayerConfig.put("st", current / 1000);
+
                     updatePlayerCfgView();
                     listener.updatePlayerCfg();
                 } catch (JSONException e) {
@@ -698,12 +708,18 @@ public class VodController extends BaseController {
                 mHandler.removeCallbacks(mHideBottomRunnable);
                 mHandler.postDelayed(mHideBottomRunnable, 10000);
                 try {
-                    int step = Hawk.get(HawkConfig.PLAY_TIME_STEP, 5);
-                    int et = mPlayerConfig.getInt("et");
-                    et += step;
-                    if (et > 60 * 10)
-                        et = 0;
-                    mPlayerConfig.put("et", et);
+//                    int step = Hawk.get(HawkConfig.PLAY_TIME_STEP, 5);
+//                    int et = mPlayerConfig.getInt("et");
+//                    et += step;
+//                    if (et > 60 * 10)
+//                        et = 0;
+
+                    // takagen99: Reference FongMi to get exact ending skip time
+                    int current = (int) mControlWrapper.getCurrentPosition();
+                    int duration = (int) mControlWrapper.getDuration();
+                    if (current < duration / 2) return;
+                    mPlayerConfig.put("et", (duration - current) / 1000);
+
                     updatePlayerCfgView();
                     listener.updatePlayerCfg();
                 } catch (JSONException e) {
@@ -780,6 +796,14 @@ public class VodController extends BaseController {
     void updatePlayerCfgView() {
         try {
             int playerType = mPlayerConfig.getInt("pl");
+            // takagen99: Only display loading speed when IJK
+            if (playerType == 1) {
+                mSpeedHidell.setVisibility(VISIBLE);
+                mSpeedll.setVisibility(VISIBLE);
+            } else {
+                mSpeedHidell.setVisibility(GONE);
+                mSpeedll.setVisibility(GONE);
+            }
             mPlayerTxt.setText(PlayerHelper.getPlayerName(playerType));
             mPlayerScaleTxt.setText(PlayerHelper.getScaleName(mPlayerConfig.getInt("sc")));
             mPlayerIJKBtn.setText(mPlayerConfig.getString("ijk"));
@@ -1056,18 +1080,24 @@ public class VodController extends BaseController {
 
     // takagen99 : Add long press to fast forward x3 speed
     private boolean fromLongPress;
+    private float currentSpeed;
 
     @Override
     public void onLongPress(MotionEvent e) {
         if (!isPaused) {
             fromLongPress = true;
-            circularReveal(mTapSeek, 1);
-            // Set Fast Forward Icon
-            mProgressTop.setVisibility(VISIBLE);
-            mPauseIcon.setImageResource(R.drawable.play_ffwd);
-            // Set x3 Speed
-            mSpeed = 3.0f;
-            setPlaySpeed(mSpeed);
+            try {
+                currentSpeed = (float) mPlayerConfig.getDouble("sp");
+                circularReveal(mTapSeek, 1);
+                // Set Fast Forward Icon
+                mProgressTop.setVisibility(VISIBLE);
+                mPauseIcon.setImageResource(R.drawable.play_ffwd);
+                // Set x3 Speed
+                mSpeed = 3.0f;
+                setPlaySpeed(mSpeed);
+            } catch (JSONException f) {
+                f.printStackTrace();
+            }
         }
     }
 
@@ -1079,8 +1109,8 @@ public class VodController extends BaseController {
                 // Set back to Pause Icon
                 mProgressTop.setVisibility(INVISIBLE);
                 mPauseIcon.setImageResource(R.drawable.play_pause);
-                // Set back Speed to x1
-                mSpeed = 1.0f;
+                // Set back to current speed
+                mSpeed = currentSpeed;
                 setPlaySpeed(mSpeed);
                 mplayerFFImg.setImageDrawable(dFFwd);
                 fromLongPress = false;
