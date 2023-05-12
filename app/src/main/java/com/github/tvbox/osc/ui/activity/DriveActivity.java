@@ -32,6 +32,7 @@ import com.github.tvbox.osc.ui.dialog.WebdavDialog;
 import com.github.tvbox.osc.util.FastClickCheckUtil;
 import com.github.tvbox.osc.util.HawkConfig;
 import com.github.tvbox.osc.util.StorageDriveType;
+import com.github.tvbox.osc.util.StringUtil;
 import com.github.tvbox.osc.viewmodel.drive.AbstractDriveViewModel;
 import com.github.tvbox.osc.viewmodel.drive.AlistDriveViewModel;
 import com.github.tvbox.osc.viewmodel.drive.LocalDriveViewModel;
@@ -53,6 +54,8 @@ import org.greenrobot.eventbus.ThreadMode;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -241,7 +244,9 @@ public class DriveActivity extends BaseActivity {
                         else if (currentDrive.getDriveType() == StorageDriveType.TYPE.WEBDAV) {
                             JsonObject config = currentDrive.getConfig();
                             String targetPath = selectedItem.getAccessingPathStr() + selectedItem.name;
-                            playFile(config.get("url").getAsString() + targetPath, driveFolderFiles);
+                            String file_url = config.get("url").getAsString() + targetPath;
+
+                            playFile(StringUtil.encode(file_url), driveFolderFiles);
                         } else if (currentDrive.getDriveType() == StorageDriveType.TYPE.ALISTWEB) {
                             playFile(viewModel.getCurrentDrive().getConfig().getAsJsonPrimitive("url").getAsString() + "d" + selectedItem.getAccessingPathStr() + selectedItem.name ,driveFolderFiles);
 //                            AlistDriveViewModel boxedViewModel = (AlistDriveViewModel) viewModel;
@@ -324,7 +329,8 @@ public class DriveActivity extends BaseActivity {
                     driveFolderFile.fileUrl = viewModel.getCurrentDrive().name + driveFolderFile.getAccessingPathStr() + driveFolderFile.name;
                 }
                 else if (driveFolderFile.getAccessingPath() != null ) {
-                    driveFolderFile.fileUrl = viewModel.getCurrentDrive().getConfig().get("url").getAsString() + prefix + TextUtils.join("/", driveFolderFile.getAccessingPath()) + "/" + driveFolderFile.name;
+                    String file_url = viewModel.getCurrentDrive().getConfig().get("url").getAsString() + prefix + TextUtils.join("/", driveFolderFile.getAccessingPath()) + "/" + driveFolderFile.name;
+                    driveFolderFile.fileUrl = StringUtil.encode(file_url);
                 }
                 if (StorageDriveType.isVideoType(driveFolderFile.fileType)) {
                     series.url = driveFolderFile.fileUrl;

@@ -4,7 +4,7 @@ android {
     compileSdkVersion 31
 
     defaultConfig {
-        applicationId 'com.github.tvbox.osc.tk'
+        applicationId 'com.github.tvbox.osc.debug'
         minSdkVersion 21
         targetSdkVersion 29
         versionCode 1
