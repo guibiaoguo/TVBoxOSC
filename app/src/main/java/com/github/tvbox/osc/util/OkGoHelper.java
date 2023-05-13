@@ -5,7 +5,6 @@ import com.github.tvbox.osc.util.SSL.SSLSocketFactoryCompat;
 import com.lzy.okgo.OkGo;
 import com.lzy.okgo.https.HttpsUtils;
 import com.lzy.okgo.interceptor.HttpLoggingInterceptor;
-import com.lzy.okgo.model.HttpHeaders;
 import com.orhanobut.hawk.Hawk;
 import com.squareup.picasso.OkHttp3Downloader;
 import com.squareup.picasso.Picasso;
