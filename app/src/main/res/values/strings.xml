@@ -10,22 +10,27 @@
     <string name="hm_retry">Retry</string>
     <string name="hm_cancel">Cancel</string>
     <string name="hm_exit">Press BACK again to EXIT</string>
+    <string name="hm_exit_live">Press BACK again to exit LiveTV</string>
     <string name="hm_date1">dd MMM</string>
     <string name="hm_date2">EE hh:mm aa</string>
     <string name="hm_hist">History</string>
-    <string name="hm_live">Live</string>
+    <string name="hm_live">LiveTV</string>
     <string name="hm_search">Search</string>
     <string name="hm_push">Push</string>
-    <string name="hm_file">File</string>
-    <string name="hm_fav">Star</string>
+    <string name="hm_file">Drives</string>
+    <string name="hm_fav">Favorite</string>
     <string name="hm_setting">Menu</string>
+    <string name="hm_style_line">Line View</string>
+    <string name="hm_style_grid">Grid View</string>
     <string name="hm_hist_del">Removed from History</string>
+    <string name="hm_cache_del">Cache Cleared</string>
 
     // Play Detail Page //
     <string name="det_play">Play</string>
     <string name="det_expand">Expand</string>
     <string name="det_search">Search</string>
     <string name="det_sort">Sort</string>
+    <string name="det_push">Push</string>
     <string name="det_fav">Favorite</string>
     <string name="det_fav_add">Added to Favorite</string>
     <string name="det_fav_del">Removed from Favorite</string>
@@ -44,8 +49,9 @@
     // Settings Menu Page //
     <string name="mn_config">Configuration Address</string>
     <string name="mn_home">Source</string>
-    <string name="mn_home_show">Source Display</string>
+    <string name="mn_home_show">Show Source</string>
     <string name="mn_home_type">Type</string>
+    <string name="mn_icon">Button</string>
     <string name="mn_history_num">History</string>
     <string name="mn_wall_change">Wallpaper</string>
     <string name="mn_wall_load">Loading Wallpaper</string>
@@ -61,13 +67,17 @@
     <string name="mn_backup">Backup/Restore</string>
     <string name="mn_dns">DNS</string>
     <string name="mn_locale">Language</string>
+    <string name="mn_theme">Theme</string>
     <string name="mn_about">About</string>
 
     // Settings Dialog Pop-Up //
     <string name="dia_source">Select Source</string>
     <string name="dia_hm_type">Select Display Type</string>
+    <string name="dia_hm_icon">Home Icon Placement</string>
     <string name="dia_history">Select History to Keep</string>
     <string name="dia_history_list">Configuration History List</string>
+    <string name="dia_history_live">Live History List</string>
+    <string name="dia_history_epg">EPG History List</string>
     <string name="dia_player">Select Player Type</string>
     <string name="dia_decode">Select IJK Decoder</string>
     <string name="dia_search">Select Search Mode</string>
@@ -77,6 +87,7 @@
     <string name="dia_bkpkg">Select Backup Package</string>
     <string name="dia_dns">Select DNS</string>
     <string name="dia_locale">Select Language</string>
+    <string name="dia_theme">Select Theme</string>
 
     // Settings Backup Restore Page //
     <string name="set_bkup_ok">Backup Success</string>
@@ -92,10 +103,13 @@
     <string name="set_permission_fail2">Failed to get Permission, please grant in Settings</string>
 
     // Activity Page //
+    <string name="act_app">Applications</string>
+    <string name="act_app_sel">Select to</string>
+    <string name="act_app_rm">Uninstall</string>
     <string name="act_fav">Favorite</string>
     <string name="act_fav_sel">Select to</string>
     <string name="act_fav_rm">Remove</string>
-    <string name="act_drive">Folder</string>
+    <string name="act_drive">Drives</string>
     <string name="act_hist">History</string>
     <string name="act_hist_sel">Select to</string>
     <string name="act_hist_rm">Remove</string>
@@ -109,6 +123,12 @@
     <string name="act_home">Home</string>
     <string name="act_player">Player</string>
     <string name="act_system">System</string>
+
+    // Search Page //
+    <string name="search_input">Input cannot be blank</string>
+    <string name="search_site">No source site selected</string>
+    <string name="search_checkAll">Select All</string>
+    <string name="search_clearAll">Select None</string>
 
     // Fast Search Page //
     <string name="fs_show_all">All</string>
@@ -124,9 +144,32 @@
     <string name="vod_sub_int">Internal</string>
     <string name="vod_sub_ext">External</string>
     <string name="vod_sub_remote">Search</string>
+    <string name="vod_sub_drive">Drive</string>
     <string name="vod_sub_size">Size</string>
     <string name="vod_sub_delay">Delay</string>
     <string name="vod_sub_search">Search</string>
     <string name="vod_sub_off">Subtitle Off</string>
+    <string name="vod_remaining_time">Remaining Time</string>
+    <string name="vod_ends_at">Ends at</string>
+
+    // EXO Player
+    <string name="exo_track_selection_title_video">Video</string>
+    <string name="exo_track_selection_title_audio">Audio</string>
+    <string name="exo_track_selection_title_text">Text</string>
+    <string name="exo_track_selection_none">None</string>
+    <string name="exo_track_selection_auto">Auto</string>
+    <string name="exo_track_unknown">Unknown</string>
+    <string name="exo_track_resolution">%1$d × %2$d</string>
+    <string name="exo_track_mono">Mono</string>
+    <string name="exo_track_stereo">Stereo</string>
+    <string name="exo_track_surround">Surround Sound</string>
+    <string name="exo_track_surround_5_point_1">5.1 Surround Sound</string>
+    <string name="exo_track_surround_7_point_1">7.1 Surround Sound</string>
+    <string name="exo_track_role_alternate">Alternate</string>
+    <string name="exo_track_role_supplementary">Supplementary</string>
+    <string name="exo_track_role_commentary">Commentary</string>
+    <string name="exo_track_role_closed_captions">CC</string>
+    <string name="exo_track_bitrate">%1$.2f Mbps</string>
+    <string name="exo_item_list">%1$s，%2$s</string>
 
 </resources>

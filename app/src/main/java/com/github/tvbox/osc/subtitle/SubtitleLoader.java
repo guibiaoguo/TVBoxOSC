@@ -11,8 +11,10 @@ import com.github.tvbox.osc.subtitle.format.FormatSTL;
 import com.github.tvbox.osc.subtitle.model.TimedTextObject;
 import com.github.tvbox.osc.subtitle.runtime.AppTaskExecutor;
 import com.github.tvbox.osc.util.FileUtils;
+import com.github.tvbox.osc.util.StringUtil;
 import com.github.tvbox.osc.util.UnicodeReader;
 import com.lzy.okgo.OkGo;
+import com.lzy.okgo.model.HttpHeaders;
 
 import org.apache.commons.io.input.ReaderInputStream;
 import org.mozilla.universalchardet.UniversalDetector;
@@ -24,6 +26,7 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
+import java.util.Map;
 
 import okhttp3.Response;
 
@@ -135,7 +138,7 @@ public class SubtitleLoader {
             throws IOException, FatalParsingException, Exception {
         Log.d(TAG, "parseRemote: remoteSubtitlePath = " + remoteSubtitlePath);
         String referer = "";
-        if (remoteSubtitlePath.contains("alicloud")) {
+        if (remoteSubtitlePath.contains("alicloud") || remoteSubtitlePath.contains("aliyundrive")) {
             referer = "https://www.aliyundrive.com/";
         } else if (remoteSubtitlePath.contains("assrt.net")) {
             referer = "https://secure.assrt.net/";
@@ -143,9 +146,16 @@ public class SubtitleLoader {
             referer = "https://www.aliyundrive.com/";
         }
         String ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.54 Safari/537.36";
+        Map<String, String> head = StringUtil.getParameters(remoteSubtitlePath, "?");
+        HttpHeaders headers = new HttpHeaders();
+        for (Map.Entry<String, String> entry: head.entrySet()) {
+            headers.put(entry.getKey(), entry.getValue());
+        }
         Response response = OkGo.<String>get(remoteSubtitlePath)
                 .headers("Referer", referer)
                 .headers("User-Agent", ua)
+                .headers(headers)
+//                .headers("authorization", StringUtil.getParameter(remoteSubtitlePath, "authorization="))
                 .execute();
         byte[] bytes = response.body().bytes();
         UniversalDetector detector = new UniversalDetector(null);

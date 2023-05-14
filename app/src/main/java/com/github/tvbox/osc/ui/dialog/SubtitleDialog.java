@@ -22,6 +22,7 @@ public class SubtitleDialog extends BaseDialog {
     public TextView selectInternal;
     public TextView selectLocal;
     public TextView selectRemote;
+    public TextView selectDrive;
     private ImageView subtitleSizeMinus;
     private TextView subtitleSizeText;
     private ImageView subtitleSizePlus;
@@ -33,6 +34,7 @@ public class SubtitleDialog extends BaseDialog {
 
     private SubtitleViewListener mSubtitleViewListener;
     private LocalFileChooserListener mLocalFileChooserListener;
+    private DriveFileChooserListener mDriveFileChooserListener;
     private SearchSubtitleListener mSearchSubtitleListener;
 
     public SubtitleDialog(@NonNull @NotNull Context context) {
@@ -49,6 +51,7 @@ public class SubtitleDialog extends BaseDialog {
         selectInternal = findViewById(R.id.selectInternal);
         selectLocal = findViewById(R.id.selectLocal);
         selectRemote = findViewById(R.id.selectRemote);
+        selectDrive = findViewById(R.id.selectDrive);
         subtitleSizeMinus = findViewById(R.id.subtitleSizeMinus);
         subtitleSizeText = findViewById(R.id.subtitleSizeText);
         subtitleSizePlus = findViewById(R.id.subtitleSizePlus);
@@ -63,6 +66,7 @@ public class SubtitleDialog extends BaseDialog {
         selectInternal.setText(HomeActivity.getRes().getString(R.string.vod_sub_int));
         selectLocal.setText(HomeActivity.getRes().getString(R.string.vod_sub_ext));
         selectRemote.setText(HomeActivity.getRes().getString(R.string.vod_sub_remote));
+        selectDrive.setText(HomeActivity.getRes().getString(R.string.vod_sub_drive));
         subtitleSizeText.setText(HomeActivity.getRes().getString(R.string.vod_sub_size));
         subtitleTimeText.setText(HomeActivity.getRes().getString(R.string.vod_sub_delay));
 
@@ -91,6 +95,15 @@ public class SubtitleDialog extends BaseDialog {
                 FastClickCheckUtil.check(view);
                 dismiss();
                 mSearchSubtitleListener.openSearchSubtitleDialog();
+            }
+        });
+
+        selectDrive.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                FastClickCheckUtil.check(view);
+                dismiss();
+                mDriveFileChooserListener.openDriveFileChooserDialog();
             }
         });
 
@@ -199,6 +212,14 @@ public class SubtitleDialog extends BaseDialog {
 
     public interface LocalFileChooserListener {
         void openLocalFileChooserDialog();
+    }
+
+    public void setDriveFileChooserListener(DriveFileChooserListener driveFileChooserListener) {
+        mDriveFileChooserListener = driveFileChooserListener;
+    }
+
+    public interface DriveFileChooserListener {
+        void openDriveFileChooserDialog();
     }
 
     public void setSearchSubtitleListener(SearchSubtitleListener searchSubtitleListener) {

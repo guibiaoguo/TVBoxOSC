@@ -233,7 +233,7 @@ public final class PlayerUtils {
     /**
      * 通过反射获取Application
      *
-     * @deprecated 不在使用，后期谷歌可能封掉改接口
+     * @deprecated 不在使用，后期谷歌可能封掉该接口
      */
     @SuppressLint("PrivateApi")
     @Deprecated
@@ -271,6 +271,14 @@ public final class PlayerUtils {
         } else {
             return String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds);
         }
+    }
+
+    public static String stringForTimeVod(int timeMs) {
+        int totalSeconds = timeMs / 1000;
+        int seconds = totalSeconds % 60;
+        int minutes = (totalSeconds / 60) % 60;
+        int hours = totalSeconds / 3600;
+        return String.format(Locale.getDefault(), "%02d:%02d:%02d", hours, minutes, seconds);
     }
 
     /**

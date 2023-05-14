@@ -16,7 +16,7 @@ public class VideoViewManager {
     /**
      * 保存VideoView的容器
      */
-    private LinkedHashMap<String, VideoView> mVideoViews = new LinkedHashMap<>();
+    private final LinkedHashMap<String, VideoView> mVideoViews = new LinkedHashMap<>();
 
     /**
      * 是否在移动网络下直接播放视频

@@ -4,16 +4,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
+import android.content.res.TypedArray;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Looper;
 import android.util.DisplayMetrics;
-import android.view.KeyCharacterMap;
-import android.view.KeyEvent;
 import android.view.View;
-import android.view.ViewConfiguration;
+import android.view.WindowManager;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -34,10 +33,10 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.lang.Math;
 
 import me.jessyan.autosize.AutoSizeCompat;
 import me.jessyan.autosize.internal.CustomAdapt;
+import xyz.doikki.videoplayer.util.CutoutUtil;
 
 /**
  * @author pj567
@@ -73,17 +72,37 @@ public abstract class BaseActivity extends AppCompatActivity implements CustomAd
         } catch (Throwable th) {
             th.printStackTrace();
         }
+
+        // takagen99 : Set Theme Color
+        if (Hawk.get(HawkConfig.THEME_SELECT, 0) == 0) {
+            setTheme(R.style.NetfxTheme);
+        } else if (Hawk.get(HawkConfig.THEME_SELECT, 0) == 1) {
+            setTheme(R.style.DoraeTheme);
+        } else if (Hawk.get(HawkConfig.THEME_SELECT, 0) == 2) {
+            setTheme(R.style.PepsiTheme);
+        } else if (Hawk.get(HawkConfig.THEME_SELECT, 0) == 3) {
+            setTheme(R.style.NarutoTheme);
+        } else if (Hawk.get(HawkConfig.THEME_SELECT, 0) == 4) {
+            setTheme(R.style.MinionTheme);
+        } else if (Hawk.get(HawkConfig.THEME_SELECT, 0) == 5) {
+            setTheme(R.style.YagamiTheme);
+        } else {
+            setTheme(R.style.SakuraTheme);
+        }
+
         super.onCreate(savedInstanceState);
         setContentView(getLayoutResID());
         mContext = this;
+        CutoutUtil.adaptCutoutAboveAndroidP(mContext, true);//设置刘海
         AppManager.getInstance().addActivity(this);
         init();
+        setScreenOn();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        hideSysBar();
+        hideSystemUI(true);
         changeWallpaper(false);
     }
 
@@ -123,6 +142,37 @@ public abstract class BaseActivity extends AppCompatActivity implements CustomAd
             uiOptions |= View.SYSTEM_UI_FLAG_FULLSCREEN;
             uiOptions |= View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
             getWindow().getDecorView().setSystemUiVisibility(uiOptions);
+        }
+    }
+
+    public void hideSystemUI(boolean shownavbar) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            int uiVisibility = getWindow().getDecorView().getSystemUiVisibility();
+            uiVisibility |= View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
+            uiVisibility |= View.SYSTEM_UI_FLAG_LOW_PROFILE;
+            uiVisibility |= View.SYSTEM_UI_FLAG_FULLSCREEN;
+            uiVisibility |= View.SYSTEM_UI_FLAG_IMMERSIVE;
+            uiVisibility |= View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+            if (!shownavbar) {
+                uiVisibility |= View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
+                uiVisibility |= View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION;
+            }
+            getWindow().getDecorView().setSystemUiVisibility(uiVisibility);
+            // set content behind navigation bar
+//        getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
+        }
+    }
+
+    public void showSystemUI() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            int uiVisibility = getWindow().getDecorView().getSystemUiVisibility();
+            uiVisibility &= ~View.SYSTEM_UI_FLAG_LOW_PROFILE;
+            uiVisibility &= ~View.SYSTEM_UI_FLAG_FULLSCREEN;
+            uiVisibility &= ~View.SYSTEM_UI_FLAG_IMMERSIVE;
+            uiVisibility &= ~View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+            uiVisibility &= ~View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
+            uiVisibility &= ~View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION;
+            getWindow().getDecorView().setSystemUiVisibility(uiVisibility);
         }
     }
 
@@ -221,6 +271,31 @@ public abstract class BaseActivity extends AppCompatActivity implements CustomAd
 
     public boolean supportsPiPMode() {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.O;
+    }
+
+    public boolean supportsTouch() {
+        return getPackageManager().hasSystemFeature("android.hardware.touchscreen");
+    }
+
+    public void setScreenBrightness(float amt) {
+        WindowManager.LayoutParams lparams = getWindow().getAttributes();
+        lparams.screenBrightness = amt;
+        getWindow().setAttributes(lparams);
+    }
+
+    public void setScreenOn() {
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    }
+
+    public void setScreenOff() {
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    }
+
+    // takagen99: Added Theme Color
+    public int getThemeColor() {
+        TypedArray a = mContext.obtainStyledAttributes(R.styleable.themeColor);
+        int themeColor = a.getColor(R.styleable.themeColor_color_theme, 0);
+        return themeColor;
     }
 
     protected static BitmapDrawable globalWp = null;

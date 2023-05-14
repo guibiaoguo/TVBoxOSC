@@ -628,7 +628,11 @@ public class StringUtil {
         return Pattern.matches(base64Pattern, str);
     }
 
-    public static Map<String, String> getParameter(String url, String prefix) {
+    public static String getParameter(String url, String param) {
+        return getParameters(url, "?").get(param);
+    }
+
+    public static Map<String, String> getParameters(String url, String prefix) {
         Map<String, String> map = new HashMap<String, String>();
         try {
             final String charset = "utf-8";

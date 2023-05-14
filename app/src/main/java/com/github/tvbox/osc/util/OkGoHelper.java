@@ -5,6 +5,7 @@ import com.github.tvbox.osc.util.SSL.SSLSocketFactoryCompat;
 import com.lzy.okgo.OkGo;
 import com.lzy.okgo.https.HttpsUtils;
 import com.lzy.okgo.interceptor.HttpLoggingInterceptor;
+import com.lzy.okgo.model.HttpHeaders;
 import com.orhanobut.hawk.Hawk;
 import com.squareup.picasso.OkHttp3Downloader;
 import com.squareup.picasso.Picasso;
@@ -26,7 +27,7 @@ import okhttp3.Cache;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.dnsoverhttps.DnsOverHttps;
-//import okhttp3.internal.Version;
+import okhttp3.internal.Util;
 import xyz.doikki.videoplayer.exo.ExoMediaSourceHelper;
 
 public class OkGoHelper {
@@ -57,7 +58,7 @@ public class OkGoHelper {
         }
         builder.dns(dnsOverHttps);
 
-        ExoMediaSourceHelper.getInstance(App.getInstance());
+        ExoMediaSourceHelper.getInstance(App.getInstance()).setOkClient(builder.build());
     }
 
     public static DnsOverHttps dnsOverHttps = null;
@@ -119,6 +120,17 @@ public class OkGoHelper {
         dnsOverHttps = new DnsOverHttps.Builder().client(dohClient).url(dohUrl.isEmpty() ? null : HttpUrl.get(dohUrl)).build();
     }
 
+    static OkHttpClient defaultClient = null;
+    static OkHttpClient noRedirectClient = null;
+
+    public static OkHttpClient getDefaultClient() {
+        return defaultClient;
+    }
+
+    public static OkHttpClient getNoRedirectClient() {
+        return noRedirectClient;
+    }
+
     public static void init() {
         initDnsOverHttps();
 
@@ -146,10 +158,16 @@ public class OkGoHelper {
             th.printStackTrace();
         }
 
-//        HttpHeaders.setUserAgent(Version.userAgent());
+        HttpHeaders.setUserAgent(Util.userAgent);
 
         OkHttpClient okHttpClient = builder.build();
         OkGo.getInstance().setOkHttpClient(okHttpClient);
+
+        defaultClient = okHttpClient;
+
+        builder.followRedirects(false);
+        builder.followSslRedirects(false);
+        noRedirectClient = builder.build();
 
         initExoOkHttpClient();
         initPicasso(okHttpClient);

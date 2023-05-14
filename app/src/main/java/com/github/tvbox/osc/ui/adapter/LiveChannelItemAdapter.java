@@ -1,13 +1,12 @@
 package com.github.tvbox.osc.ui.adapter;
 
 import android.graphics.Color;
-import android.view.View;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.BaseViewHolder;
 import com.github.tvbox.osc.R;
+import com.github.tvbox.osc.base.BaseActivity;
 import com.github.tvbox.osc.bean.LiveChannelItem;
 
 import java.util.ArrayList;
@@ -20,7 +19,6 @@ import java.util.ArrayList;
 public class LiveChannelItemAdapter extends BaseQuickAdapter<LiveChannelItem, BaseViewHolder> {
     private int selectedChannelIndex = -1;
     private int focusedChannelIndex = -1;
-    private int longClickChannelIndex = -1;
 
     public LiveChannelItemAdapter() {
         super(R.layout.item_live_channel, new ArrayList<>());
@@ -30,23 +28,19 @@ public class LiveChannelItemAdapter extends BaseQuickAdapter<LiveChannelItem, Ba
     protected void convert(BaseViewHolder holder, LiveChannelItem item) {
         TextView tvChannelNum = holder.getView(R.id.tvChannelNum);
         TextView tvChannel = holder.getView(R.id.tvChannelName);
-        ImageView imageView = holder.getView(R.id.tvChannelIcon);
         tvChannelNum.setText(String.format("%s", item.getChannelNum()));
         tvChannel.setText(item.getChannelName());
         int channelIndex = item.getChannelIndex();
-        if (channelIndex == selectedChannelIndex && (channelIndex != focusedChannelIndex || channelIndex == longClickChannelIndex)) {
-            tvChannelNum.setTextColor(mContext.getResources().getColor(R.color.color_FF0057));
-            tvChannel.setTextColor(mContext.getResources().getColor(R.color.color_FF0057));
+        if (channelIndex == selectedChannelIndex && channelIndex != focusedChannelIndex) {
+            // takagen99: Added Theme Color
+//            tvChannelNum.setTextColor(mContext.getResources().getColor(R.color.color_theme));
+//            tvChannel.setTextColor(mContext.getResources().getColor(R.color.color_theme));
+            tvChannelNum.setTextColor(((BaseActivity) mContext).getThemeColor());
+            tvChannel.setTextColor(((BaseActivity) mContext).getThemeColor());
         }
-        else if (channelIndex != longClickChannelIndex){
+        else{
             tvChannelNum.setTextColor(Color.WHITE);
             tvChannel.setTextColor(Color.WHITE);
-        }
-        if(item.isFavor()) {
-            imageView.setImageResource(R.drawable.icon_collect);
-            imageView.setVisibility(View.VISIBLE);
-        } else {
-            imageView.setVisibility(View.GONE);
         }
     }
 
@@ -67,17 +61,6 @@ public class LiveChannelItemAdapter extends BaseQuickAdapter<LiveChannelItem, Ba
             notifyItemChanged(preFocusedChannelIndex);
         if (this.focusedChannelIndex != -1)
             notifyItemChanged(this.focusedChannelIndex);
-        else if (this.selectedChannelIndex != -1)
-            notifyItemChanged(this.selectedChannelIndex);
-    }
-
-    public void setLongClickChannelIndex(int longClickChannelIndex) {
-        int preLongClickChannelIndex = this.longClickChannelIndex;
-        this.longClickChannelIndex = longClickChannelIndex;
-        if (preLongClickChannelIndex != -1)
-            notifyItemChanged(preLongClickChannelIndex);
-        if (this.longClickChannelIndex != -1)
-            notifyItemChanged(this.longClickChannelIndex);
         else if (this.selectedChannelIndex != -1)
             notifyItemChanged(this.selectedChannelIndex);
     }

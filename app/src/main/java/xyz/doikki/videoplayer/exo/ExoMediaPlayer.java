@@ -2,9 +2,15 @@ package xyz.doikki.videoplayer.exo;
 
 import android.content.Context;
 import android.content.res.AssetFileDescriptor;
+import android.net.TrafficStats;
+import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 
+import androidx.annotation.NonNull;
+
+import com.github.tvbox.osc.base.App;
+import com.github.tvbox.osc.util.LOG;
 import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.DefaultRenderersFactory;
 import com.google.android.exoplayer2.ExoPlayer;
@@ -12,105 +18,88 @@ import com.google.android.exoplayer2.LoadControl;
 import com.google.android.exoplayer2.PlaybackException;
 import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.Player;
-import com.google.android.exoplayer2.RenderersFactory;
-import com.google.android.exoplayer2.analytics.DefaultAnalyticsCollector;
-import com.google.android.exoplayer2.source.DefaultMediaSourceFactory;
+import com.google.android.exoplayer2.Tracks;
 import com.google.android.exoplayer2.source.MediaSource;
-import com.google.android.exoplayer2.source.MergingMediaSource;
+import com.google.android.exoplayer2.source.TrackGroupArray;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
-import com.google.android.exoplayer2.trackselection.MappingTrackSelector;
-import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
-import com.google.android.exoplayer2.upstream.SlidingPercentile;
-import com.google.android.exoplayer2.util.Clock;
-import com.google.android.exoplayer2.util.EventLogger;
+import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.google.android.exoplayer2.video.VideoSize;
 
 import java.util.Map;
 
 import xyz.doikki.videoplayer.player.AbstractPlayer;
-import xyz.doikki.videoplayer.player.VideoViewManager;
-
 
 public class ExoMediaPlayer extends AbstractPlayer implements Player.Listener {
 
     protected Context mAppContext;
-    protected ExoPlayer mInternalPlayer;
+    protected ExoPlayer mMediaPlayer;
     protected MediaSource mMediaSource;
-    protected MediaSource mTextSource;
     protected ExoMediaSourceHelper mMediaSourceHelper;
 
-    private PlaybackParameters mSpeedPlaybackParameters;
+    public ExoTrackNameProvider getTrackNameProvider() {
+        return trackNameProvider;
+    }
 
+    protected ExoTrackNameProvider trackNameProvider;
+    protected TrackSelectionArray mTrackSelections;
+    private PlaybackParameters mSpeedPlaybackParameters;
     private boolean mIsPreparing;
 
     private LoadControl mLoadControl;
-    private RenderersFactory mRenderersFactory;
-    private MappingTrackSelector mTrackSelector;
+    private DefaultRenderersFactory mRenderersFactory;
+    private DefaultTrackSelector mTrackSelector;
 
-    private DefaultBandwidthMeter defaultBandwidthMeter;
-    private Player.Listener listener;
-
-    private SlidingPercentile mVideoSlidingPercentile = new SlidingPercentile(3000);
-
+    private int errorCode = -100;
+    private String path;
+    private Map<String, String> headers;
 
     public ExoMediaPlayer(Context context) {
         mAppContext = context.getApplicationContext();
         mMediaSourceHelper = ExoMediaSourceHelper.getInstance(context);
     }
 
-    public void setListener(Player.Listener listener) {
-        this.listener = listener;
-    }
-
     @Override
     public void initPlayer() {
-        defaultBandwidthMeter = DefaultBandwidthMeter.getSingletonInstance(mAppContext);
-        mInternalPlayer = new ExoPlayer.Builder(
+        if (mRenderersFactory == null) {
+            mRenderersFactory = new DefaultRenderersFactory(mAppContext);
+        }
+        mRenderersFactory.setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER);
+        if (mTrackSelector == null) {
+            mTrackSelector = new DefaultTrackSelector(mAppContext);
+        }
+        if (mLoadControl == null) {
+            mLoadControl = new DefaultLoadControl();
+        }
+        mTrackSelector.setParameters(mTrackSelector.getParameters().buildUpon().setTunnelingEnabled(true));
+        /*mMediaPlayer = new SimpleExoPlayer.Builder(
                 mAppContext,
-                mRenderersFactory == null ? mRenderersFactory = new DefaultRenderersFactory(mAppContext) : mRenderersFactory,
+                mRenderersFactory,
+                mTrackSelector,
                 new DefaultMediaSourceFactory(mAppContext),
-                mTrackSelector == null ? mTrackSelector = new DefaultTrackSelector(mAppContext) : mTrackSelector,
-                mLoadControl == null ? mLoadControl = new DefaultLoadControl() : mLoadControl,
-                defaultBandwidthMeter,
-                new DefaultAnalyticsCollector(Clock.DEFAULT))
-                .build();
+                mLoadControl,
+                DefaultBandwidthMeter.getSingletonInstance(mAppContext),
+                new AnalyticsCollector(Clock.DEFAULT))
+                .build();*/
+        mMediaPlayer = new ExoPlayer.Builder(mAppContext)
+                .setLoadControl(mLoadControl)
+                .setRenderersFactory(mRenderersFactory)
+                .setTrackSelector(mTrackSelector).build();
+
         setOptions();
 
-        //播放器日志
-        if (VideoViewManager.getConfig().mIsEnableLog && mTrackSelector instanceof MappingTrackSelector) {
-            mInternalPlayer.addAnalyticsListener(new EventLogger((MappingTrackSelector) mTrackSelector, "ExoPlayer"));
-        }
-        if (listener != null) {
-            mInternalPlayer.addListener(listener);
-        }
-        mInternalPlayer.addListener(this);
+        mMediaPlayer.addListener(this);
     }
 
-    public void setTrackSelector(MappingTrackSelector trackSelector) {
-        mTrackSelector = trackSelector;
-    }
-
-    public void setRenderersFactory(RenderersFactory renderersFactory) {
-        mRenderersFactory = renderersFactory;
-    }
-
-    public void setLoadControl(LoadControl loadControl) {
-        mLoadControl = loadControl;
+    public DefaultTrackSelector getTrackSelector() {
+        return mTrackSelector;
     }
 
     @Override
     public void setDataSource(String path, Map<String, String> headers) {
-        mMediaSource = mMediaSourceHelper.getMediaSource(path, headers);
-    }
-
-    /**
-     * 设置字幕
-     *
-     * @param subtitle 字幕
-     * @param headers  播放地址请求头
-     */
-    public void setTextSource(String subtitle, String name, Map<String, String> headers) {
-        mTextSource = mMediaSourceHelper.getTextSource(subtitle, name, headers);
+        this.path = path;
+        this.headers = headers;
+        mMediaSource = mMediaSourceHelper.getMediaSource(path, headers, false, errorCode);
+        errorCode = -1;
     }
 
     @Override
@@ -120,62 +109,57 @@ public class ExoMediaPlayer extends AbstractPlayer implements Player.Listener {
 
     @Override
     public void start() {
-        if (mInternalPlayer == null)
+        if (mMediaPlayer == null)
             return;
-        mInternalPlayer.setPlayWhenReady(true);
+        mMediaPlayer.setPlayWhenReady(true);
     }
 
     @Override
     public void pause() {
-        if (mInternalPlayer == null)
+        if (mMediaPlayer == null)
             return;
-        mInternalPlayer.setPlayWhenReady(false);
+        mMediaPlayer.setPlayWhenReady(false);
     }
 
     @Override
     public void stop() {
-        if (mInternalPlayer == null)
+        if (mMediaPlayer == null)
             return;
-        mInternalPlayer.stop();
+        mMediaPlayer.stop();
     }
 
     @Override
     public void prepareAsync() {
-        if (mInternalPlayer == null)
+        if (mMediaPlayer == null)
             return;
         if (mMediaSource == null) return;
         if (mSpeedPlaybackParameters != null) {
-            mInternalPlayer.setPlaybackParameters(mSpeedPlaybackParameters);
+            mMediaPlayer.setPlaybackParameters(mSpeedPlaybackParameters);
         }
         mIsPreparing = true;
-        if (mTextSource != null) {
-            MergingMediaSource mergedSource = new MergingMediaSource(mMediaSource, mTextSource);
-            mInternalPlayer.setMediaSource(mergedSource);
-        } else {
-            mInternalPlayer.setMediaSource(mMediaSource);
-        }
-        mInternalPlayer.prepare();
+        mMediaPlayer.setMediaSource(mMediaSource);
+        mMediaPlayer.prepare();
     }
 
     @Override
     public void reset() {
-        if (mInternalPlayer != null) {
-            mInternalPlayer.stop();
-            mInternalPlayer.clearMediaItems();
-            mInternalPlayer.setVideoSurface(null);
+        if (mMediaPlayer != null) {
+            mMediaPlayer.stop();
+            mMediaPlayer.clearMediaItems();
+            mMediaPlayer.setVideoSurface(null);
             mIsPreparing = false;
         }
     }
 
     @Override
     public boolean isPlaying() {
-        if (mInternalPlayer == null)
+        if (mMediaPlayer == null)
             return false;
-        int state = mInternalPlayer.getPlaybackState();
+        int state = mMediaPlayer.getPlaybackState();
         switch (state) {
             case Player.STATE_BUFFERING:
             case Player.STATE_READY:
-                return mInternalPlayer.getPlayWhenReady();
+                return mMediaPlayer.getPlayWhenReady();
             case Player.STATE_IDLE:
             case Player.STATE_ENDED:
             default:
@@ -185,46 +169,47 @@ public class ExoMediaPlayer extends AbstractPlayer implements Player.Listener {
 
     @Override
     public void seekTo(long time) {
-        if (mInternalPlayer == null)
+        if (mMediaPlayer == null)
             return;
-        mInternalPlayer.seekTo(time);
+        mMediaPlayer.seekTo(time);
     }
 
     @Override
     public void release() {
-        if (mInternalPlayer != null) {
-            mInternalPlayer.removeListener(this);
-            mInternalPlayer.release();
-            mInternalPlayer = null;
+        if (mMediaPlayer != null) {
+            mMediaPlayer.removeListener(this);
+            mMediaPlayer.release();
+            mMediaPlayer = null;
         }
-
+        lastTotalRxBytes = 0;
+        lastTimeStamp = 0;
         mIsPreparing = false;
         mSpeedPlaybackParameters = null;
     }
 
     @Override
     public long getCurrentPosition() {
-        if (mInternalPlayer == null)
+        if (mMediaPlayer == null)
             return 0;
-        return mInternalPlayer.getCurrentPosition();
+        return mMediaPlayer.getCurrentPosition();
     }
 
     @Override
     public long getDuration() {
-        if (mInternalPlayer == null)
+        if (mMediaPlayer == null)
             return 0;
-        return mInternalPlayer.getDuration();
+        return mMediaPlayer.getDuration();
     }
 
     @Override
     public int getBufferedPercentage() {
-        return mInternalPlayer == null ? 0 : mInternalPlayer.getBufferedPercentage();
+        return mMediaPlayer == null ? 0 : mMediaPlayer.getBufferedPercentage();
     }
 
     @Override
     public void setSurface(Surface surface) {
-        if (mInternalPlayer != null) {
-            mInternalPlayer.setVideoSurface(surface);
+        if (mMediaPlayer != null) {
+            mMediaPlayer.setVideoSurface(surface);
         }
     }
 
@@ -238,28 +223,28 @@ public class ExoMediaPlayer extends AbstractPlayer implements Player.Listener {
 
     @Override
     public void setVolume(float leftVolume, float rightVolume) {
-        if (mInternalPlayer != null)
-            mInternalPlayer.setVolume((leftVolume + rightVolume) / 2);
+        if (mMediaPlayer != null)
+            mMediaPlayer.setVolume((leftVolume + rightVolume) / 2);
     }
 
     @Override
     public void setLooping(boolean isLooping) {
-        if (mInternalPlayer != null)
-            mInternalPlayer.setRepeatMode(isLooping ? Player.REPEAT_MODE_ALL : Player.REPEAT_MODE_OFF);
+        if (mMediaPlayer != null)
+            mMediaPlayer.setRepeatMode(isLooping ? Player.REPEAT_MODE_ALL : Player.REPEAT_MODE_OFF);
     }
 
     @Override
     public void setOptions() {
         //准备好就开始播放
-        mInternalPlayer.setPlayWhenReady(true);
+        mMediaPlayer.setPlayWhenReady(true);
     }
 
     @Override
     public void setSpeed(float speed) {
         PlaybackParameters playbackParameters = new PlaybackParameters(speed);
         mSpeedPlaybackParameters = playbackParameters;
-        if (mInternalPlayer != null) {
-            mInternalPlayer.setPlaybackParameters(playbackParameters);
+        if (mMediaPlayer != null) {
+            mMediaPlayer.setPlaybackParameters(playbackParameters);
         }
     }
 
@@ -271,25 +256,40 @@ public class ExoMediaPlayer extends AbstractPlayer implements Player.Listener {
         return 1f;
     }
 
+    private long lastTotalRxBytes = 0;
+
+    private long lastTimeStamp = 0;
+
+    private boolean unsupported() {
+        return TrafficStats.getUidRxBytes(App.getInstance().getApplicationInfo().uid) == TrafficStats.UNSUPPORTED;
+    }
+
     @Override
     public long getTcpSpeed() {
-        if (defaultBandwidthMeter != null)
-        // no support
-            return defaultBandwidthMeter.getBitrateEstimate();
-        return 0;
+        if (mAppContext == null || unsupported()) {
+            return 0;
+        }
+        //使用getUidRxBytes方法获取该进程总接收量
+        long total = TrafficStats.getTotalRxBytes();
+        //记录当前的时间
+        long time = System.currentTimeMillis();
+        //数据接收量除以数据接收的时间，就计算网速了。
+        long diff = total - lastTotalRxBytes;
+        long speed = diff / Math.max(time - lastTimeStamp, 1);
+        //当前时间存到上次时间这个变量，供下次计算用
+        lastTimeStamp = time;
+        //当前总接收量存到上次接收总量这个变量，供下次计算用
+        lastTotalRxBytes = total;
+        LOG.e("TcpSpeed", speed * 1024 + "");
+        return speed * 1024;
     }
 
-    /**
-     * @data:Long 下载数据量 = 下载速度 * 下载耗时
-     * @value:Long 下载数据量的速度
-     */
-    public void addSpeedSample(long data,long value) {
-        //这里的数据量是下载累加的，这里会对数据量做开根号处理
-        //当采集到达：data = 9000000 ≈ 900k，开根号= 3000，这个时候窗口开始滑动
-        int weight = (int) Math.sqrt(data);
-        mVideoSlidingPercentile.addSample(weight, value);
+    @Override
+    public void onTracksChanged(Tracks tracks) {
+        if (trackNameProvider == null)
+            trackNameProvider = new ExoTrackNameProvider(mAppContext.getResources());
     }
-
+    
     @Override
     public void onPlaybackStateChanged(int playbackState) {
         if (mPlayerEventListener == null) return;
@@ -317,14 +317,23 @@ public class ExoMediaPlayer extends AbstractPlayer implements Player.Listener {
     }
 
     @Override
-    public void onPlayerError(PlaybackException error) {
-        if (mPlayerEventListener != null) {
-            mPlayerEventListener.onError();
+    public void onPlayerError(@NonNull PlaybackException error) {
+        errorCode = error.errorCode;
+        Log.e("tag--", "" + error.errorCode);
+        if (path != null) {
+            setDataSource(path, headers);
+            path = null;
+            prepareAsync();
+            start();
+        } else {
+            if (mPlayerEventListener != null) {
+                mPlayerEventListener.onError();
+            }
         }
     }
 
     @Override
-    public void onVideoSizeChanged(VideoSize videoSize) {
+    public void onVideoSizeChanged(@NonNull VideoSize videoSize) {
         if (mPlayerEventListener != null) {
             mPlayerEventListener.onVideoSizeChanged(videoSize.width, videoSize.height);
             if (videoSize.unappliedRotationDegrees > 0) {
@@ -333,7 +342,4 @@ public class ExoMediaPlayer extends AbstractPlayer implements Player.Listener {
         }
     }
 
-    public MappingTrackSelector getTrackSelector() {
-        return mTrackSelector;
-    }
 }

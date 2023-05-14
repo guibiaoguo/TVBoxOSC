@@ -33,7 +33,8 @@
 
         <activity
             android:name=".ui.activity.HomeActivity"
-            android:screenOrientation="sensorLandscape">
+            android:screenOrientation="sensorLandscape"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -41,27 +42,32 @@
                 <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
-            android:name=".ui.activity.LivePlayActivity"
-            android:theme="@style/AppTheme.NoActionBar"
+            android:name=".ui.activity.PlayActivity"
             android:screenOrientation="sensorLandscape"
             android:supportsPictureInPicture="true"
             android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation" />
         <activity
             android:name=".ui.activity.DetailActivity"
-            android:theme="@style/AppTheme.ActionBar"
             android:screenOrientation="sensorLandscape"
             android:supportsPictureInPicture="true"
             android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation" />
         <activity
-            android:name=".ui.activity.PlayActivity"
-            android:theme="@style/AppTheme.NoActionBar"
+            android:name=".ui.activity.HistoryActivity"
+            android:screenOrientation="sensorLandscape" />
+        <activity
+            android:name=".ui.activity.LivePlayActivity"
             android:screenOrientation="sensorLandscape"
             android:supportsPictureInPicture="true"
             android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation" />
+        <activity
+            android:name=".ui.activity.CollectActivity"
+            android:screenOrientation="sensorLandscape" />
         <activity
             android:name=".ui.activity.PushActivity"
+            android:screenOrientation="sensorLandscape" />
+        <activity
+            android:name=".ui.activity.DriveActivity"
             android:screenOrientation="sensorLandscape" />
         <activity
             android:name=".ui.activity.SearchActivity"
@@ -72,24 +78,26 @@
             android:windowSoftInputMode="stateHidden"
             android:screenOrientation="sensorLandscape" />
         <activity
-            android:name=".ui.activity.DriveActivity"
+            android:name=".ui.activity.AppsActivity"
             android:screenOrientation="sensorLandscape" />
         <activity
             android:name=".ui.activity.SettingActivity"
             android:screenOrientation="sensorLandscape" />
-        <activity
-            android:name=".ui.activity.HistoryActivity"
-            android:screenOrientation="sensorLandscape" />
-        <activity
-            android:name=".ui.activity.CollectActivity"
-            android:screenOrientation="sensorLandscape" />
 
-        <receiver android:name=".receiver.SearchReceiver">
+        <receiver android:name=".receiver.SearchReceiver"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.content.movie.search.Action" />
             </intent-filter>
         </receiver>
-        <receiver android:name=".receiver.CustomWebReceiver">
+        <receiver android:name=".receiver.DetailReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.content.movie.detail.Action" />
+            </intent-filter>
+        </receiver>
+        <receiver android:name=".receiver.CustomWebReceiver"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.content.movie.custom.web.Action" />
             </intent-filter>
