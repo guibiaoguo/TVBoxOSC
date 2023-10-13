@@ -17,6 +17,7 @@ import com.lzy.okgo.OkGo;
 import com.lzy.okgo.model.HttpHeaders;
 
 import org.apache.commons.io.input.ReaderInputStream;
+import org.apache.commons.lang3.StringUtils;
 import org.mozilla.universalchardet.UniversalDetector;
 
 import java.io.ByteArrayInputStream;
@@ -146,12 +147,12 @@ public class SubtitleLoader {
             referer = "https://www.aliyundrive.com/";
         }
         String ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.54 Safari/537.36";
-        Map<String, String> head = StringUtil.getParameters(remoteSubtitlePath, "?");
+        Map<String, String> head = StringUtil.getParameters(remoteSubtitlePath, "$$");
         HttpHeaders headers = new HttpHeaders();
         for (Map.Entry<String, String> entry: head.entrySet()) {
             headers.put(entry.getKey(), entry.getValue());
         }
-        Response response = OkGo.<String>get(remoteSubtitlePath)
+        Response response = OkGo.<String>get(StringUtils.split(remoteSubtitlePath, "$$")[0])
                 .headers("Referer", referer)
                 .headers("User-Agent", ua)
                 .headers(headers)
@@ -180,6 +181,11 @@ public class SubtitleLoader {
             filename = URLDecoder.decode(filename);
         }
         String filePath = filename;
+        head = StringUtil.getParameters(remoteSubtitlePath, "?");
+        if (head.get("filename") != null) {
+            filename = head.get("filename").split("\\$\\$")[0];
+            filePath = filename;
+        }
         if (filename == null || filename.length() < 1) {
             Uri uri = Uri.parse(remoteSubtitlePath);
             filePath = uri.getPath();

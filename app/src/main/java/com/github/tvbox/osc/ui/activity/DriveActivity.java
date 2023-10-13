@@ -54,6 +54,7 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 import org.jetbrains.annotations.NotNull;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.text.Collator;
@@ -107,12 +108,7 @@ public class DriveActivity extends BaseActivity {
         footLoading = getLayoutInflater().inflate(R.layout.item_search_lite, null);
         footLoading.findViewById(R.id.tvName).setVisibility(View.GONE);
         this.btnRemoveServer.setColorFilter(ContextCompat.getColor(mContext, R.color.color_FFFFFF));
-        this.btnRemoveServer.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                toggleDelMode();
-            }
-        });
+        this.btnRemoveServer.setOnClickListener(view -> toggleDelMode());
         findViewById(R.id.btnHome).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -235,30 +231,33 @@ public class DriveActivity extends BaseActivity {
                             String targetPath = config.get("url").getAsString() + selectedItem.getAccessingPathStr() + selectedItem.name;
                             playFile(StringUtil.encode(targetPath));
                         } else if (currentDrive.getDriveType() == StorageDriveType.TYPE.ALISTWEB) {
-                            AlistDriveViewModel boxedViewModel = (AlistDriveViewModel) viewModel;
-
-                            boxedViewModel.loadFile(selectedItem, new AlistDriveViewModel.LoadFileCallback() {
-                                @Override
-                                public void callback(String fileUrl) {
-                                    mHandler.post(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            playFile(fileUrl);
-                                        }
-                                    });
-                                }
-
-                                @Override
-                                public void fail(String msg) {
-                                    mHandler.post(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            Toast toast = Toast.makeText(mContext, msg, Toast.LENGTH_SHORT);
-                                            toast.show();
-                                        }
-                                    });
-                                }
-                            });
+                            JsonObject config = currentDrive.getConfig();
+                            String targetPath = config.get("url").getAsString() + "d" + selectedItem.getAccessingPathStr() + selectedItem.name;
+                            playFile(StringUtil.encode(targetPath));
+//                            AlistDriveViewModel boxedViewModel = (AlistDriveViewModel) viewModel;
+//
+//                            boxedViewModel.loadFile(selectedItem, new AlistDriveViewModel.LoadFileCallback() {
+//                                @Override
+//                                public void callback(String fileUrl) {
+//                                    mHandler.post(new Runnable() {
+//                                        @Override
+//                                        public void run() {
+//                                            playFile(fileUrl);
+//                                        }
+//                                    });
+//                                }
+//
+//                                @Override
+//                                public void fail(String msg) {
+//                                    mHandler.post(new Runnable() {
+//                                        @Override
+//                                        public void run() {
+//                                            Toast toast = Toast.makeText(mContext, msg, Toast.LENGTH_SHORT);
+//                                            toast.show();
+//                                        }
+//                                    });
+//                                }
+//                            });
                         }
                     } else {
                         Toast.makeText(DriveActivity.this, "Media Unsupported", Toast.LENGTH_SHORT).show();
@@ -278,6 +277,25 @@ public class DriveActivity extends BaseActivity {
             s2 = s2.subList(0,s1.length -2);
         }
         return StringUtils.join(s2,".");
+    }
+
+    private void listFiles(DriveFolderFile parent, List<DriveFolderFile> files, LinkedHashMap<String, List<String>> subMap) throws Exception {
+        List<DriveFolderFile> folders = new ArrayList<>();
+        DriveFolderFile item = parent;
+        for (DriveFolderFile file : item.getChildren()) {
+            if (file.isDrive()) {
+                folders.add(file);
+            } else if (StorageDriveType.isVideoType(file.fileType) ) {
+                files.add(file);
+            } else if (StringUtils.equalsAnyIgnoreCase(file.fileType.toLowerCase(),"srt,ass,ssa,vtt".split(","))) {
+                String key = getName(file.name);
+                if (!subMap.containsKey(key)) subMap.put(key, new ArrayList<>());
+                subMap.get(key).add(key + "@@@" + file.fileType + "@@@" + file.getAccessingPathStr());
+            }
+        }
+        for (DriveFolderFile folder : folders) {
+            listFiles(folder, files, subMap);
+        }
     }
 
     private void playFile(String fileUrl) {

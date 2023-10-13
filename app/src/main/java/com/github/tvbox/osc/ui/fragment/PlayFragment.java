@@ -46,6 +46,7 @@ import com.github.tvbox.osc.api.ApiConfig;
 import com.github.tvbox.osc.base.BaseLazyFragment;
 import com.github.tvbox.osc.bean.ParseBean;
 import com.github.tvbox.osc.bean.SourceBean;
+import com.github.tvbox.osc.bean.Sub;
 import com.github.tvbox.osc.bean.Subtitle;
 import com.github.tvbox.osc.bean.VodInfo;
 import com.github.tvbox.osc.cache.CacheManager;
@@ -60,6 +61,7 @@ import com.github.tvbox.osc.player.thirdparty.Kodi;
 import com.github.tvbox.osc.player.thirdparty.MXPlayer;
 import com.github.tvbox.osc.player.thirdparty.ReexPlayer;
 import com.github.tvbox.osc.ui.activity.DetailActivity;
+import com.github.tvbox.osc.ui.activity.PlayActivity;
 import com.github.tvbox.osc.ui.adapter.SelectDialogAdapter;
 import com.github.tvbox.osc.ui.dialog.SearchSubtitleDialog;
 import com.github.tvbox.osc.ui.dialog.SelectDialog;
@@ -76,6 +78,11 @@ import com.github.tvbox.osc.util.thunder.Thunder;
 import com.github.tvbox.osc.viewmodel.SourceViewModel;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.text.Cue;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.reflect.TypeToken;
 import com.lzy.okgo.OkGo;
 import com.lzy.okgo.callback.AbsCallback;
 import com.lzy.okgo.model.HttpHeaders;
@@ -84,6 +91,7 @@ import com.obsez.android.lib.filechooser.ChooserDialog;
 import com.orhanobut.hawk.Hawk;
 import com.github.tvbox.quickjs.JSUtils;
 
+import org.apache.commons.lang3.StringUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
@@ -101,6 +109,7 @@ import org.xwalk.core.XWalkWebResourceResponse;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -259,7 +268,7 @@ public class PlayFragment extends BaseLazyFragment {
 
             @Override
             public void selectVideoTrack() {
-
+                selectMyVideoTrack();
             }
 
             @Override
@@ -359,6 +368,49 @@ public class PlayFragment extends BaseLazyFragment {
                         })
                         .build()
                         .show();
+            }
+        });
+        subtitleDialog.setDriveFileChooserListener(new SubtitleDialog.DriveFileChooserListener() {
+            @Override
+            public void openDriveFileChooserDialog() {
+                SelectDialog selectDialog = new SelectDialog(mContext);
+                selectDialog.setTip("网盘");
+                List<Sub> series = new Gson().fromJson(playSubtitles,new TypeToken<List<Sub>>(){}.getType());
+                selectDialog.setAdapter(new SelectDialogAdapter.SelectDialogInterface<Sub>() {
+                    @Override
+                    public void click(Sub value, int pos) {
+                        String format = value.getFormat();
+                        if (StringUtils.containsAny(format,"ass","ssa")) {
+                            format = "ass";
+                        } else if (StringUtils.containsAny(format,"vtt")) {
+                            format = "vtt";
+                        } else {
+                            format = "srt";
+                        }
+                        if (value.getUrl().indexOf("?")> -1) {
+                            playSubtitle = value.getUrl() + "&filename=" + value.getName() + "." + format + "$$" + TextUtils.join("&", params);
+                        } else {
+                            playSubtitle = value.getUrl() + "?filename=" + value.getName() + "." + format + "$$" + TextUtils.join("&", params);
+                        }
+                        setSubtitle(playSubtitle);
+                        selectDialog.dismiss();
+                    }
+                    @Override
+                    public String getDisplay(Sub val) {
+                        return val.getName() + (JSUtils.isEmpty(val.getLang())? "": " " + val.getLang());
+                    }
+                }, new DiffUtil.ItemCallback() {
+                    @Override
+                    public boolean areItemsTheSame(@NonNull Object oldItem, @NonNull Object newItem) {
+                        return false;
+                    }
+
+                    @Override
+                    public boolean areContentsTheSame(@NonNull Object oldItem, @NonNull Object newItem) {
+                        return false;
+                    }
+                },series,9999);
+                selectDialog.show();
             }
         });
         subtitleDialog.show();
@@ -528,6 +580,35 @@ public class PlayFragment extends BaseLazyFragment {
         dialog.show();
     }
 
+    void selectMyVideoTrack() {
+        SelectDialog selectDialog = new SelectDialog(mContext);
+        selectDialog.setTip("内置网盘");
+        List<VodInfo.VodSeries> series = mVodInfo.seriesMap.get(mVodInfo.playFlag);
+        selectDialog.setAdapter(new SelectDialogAdapter.SelectDialogInterface<VodInfo.VodSeries>() {
+            @Override
+            public void click(VodInfo.VodSeries vs, int pos) {
+                EventBus.getDefault().post(new RefreshEvent(RefreshEvent.TYPE_REFRESH, mVodInfo.playIndex));
+                mVodInfo.playIndex = pos;
+                selectDialog.dismiss();
+                play(false);
+            }
+            @Override
+            public String getDisplay(VodInfo.VodSeries val) {
+                return val.name;
+            }
+        }, new DiffUtil.ItemCallback() {
+            @Override
+            public boolean areItemsTheSame(@NonNull Object oldItem, @NonNull Object newItem) {
+                return false;
+            }
+
+            @Override
+            public boolean areContentsTheSame(@NonNull Object oldItem, @NonNull Object newItem) {
+                return false;
+            }
+        },series,9999);
+        selectDialog.show();
+    }
     void openMyVideo() {
         Intent i = new Intent();
         i.addCategory(Intent.CATEGORY_DEFAULT);
@@ -693,6 +774,7 @@ public class PlayFragment extends BaseLazyFragment {
                         boolean parse = info.optString("parse", "1").equals("1");
                         boolean jx = info.optString("jx", "0").equals("1");
                         playSubtitle = info.optString("subt", /*"https://dash.akamaized.net/akamai/test/caption_test/ElephantsDream/ElephantsDream_en.vtt"*/"");
+                        playSubtitles = info.optString("subs");
                         subtitleCacheKey = info.optString("subtKey", null);
                         String playUrl = info.optString("playUrl", "");
                         String flag = info.optString("flag");
@@ -700,6 +782,7 @@ public class PlayFragment extends BaseLazyFragment {
                         HashMap<String, String> headers = null;
                         webUserAgent = null;
                         webHeaderMap = null;
+                        params = new ArrayList<>();
                         if (info.has("header")) {
                             try {
                                 JSONObject hds = new JSONObject(info.getString("header"));
@@ -710,6 +793,7 @@ public class PlayFragment extends BaseLazyFragment {
                                         headers = new HashMap<>();
                                     }
                                     headers.put(key, hds.getString(key));
+                                    params.add(key.concat("=").concat(hds.getString(key)));
                                     if (key.equalsIgnoreCase("user-agent")) {
                                         webUserAgent = hds.getString(key).trim();
                                     }
@@ -965,7 +1049,10 @@ public class PlayFragment extends BaseLazyFragment {
         sourceViewModel.getPlay(sourceKey, mVodInfo.playFlag, progressKey, vs.url, subtitleCacheKey);
     }
 
+    private List<String> params;
+
     private String playSubtitle;
+    private String playSubtitles;
     private String subtitleCacheKey;
     private String progressKey;
     private String parseFlag;

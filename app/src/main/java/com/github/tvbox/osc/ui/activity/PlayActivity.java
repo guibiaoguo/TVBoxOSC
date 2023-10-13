@@ -387,9 +387,9 @@ public class PlayActivity extends BaseActivity {
                     @Override
                     public void click(VodInfo.VodSeries value, int pos) {
                         if (value.subtitle.indexOf("?")> -1) {
-                            playSubtitle = value.subtitle + "&" + TextUtils.join("&", params);
+                            playSubtitle = value.subtitle + "&filename" + value.subtitleName + "$$" +  TextUtils.join("&", params);
                         } else {
-                            playSubtitle = value.subtitle + "?" + TextUtils.join("&", params);
+                            playSubtitle = value.subtitle + "?filename" + value.subtitleName + "$$" +  TextUtils.join("&", params);
                         }
                         setSubtitle(playSubtitle);
                         selectDialog.dismiss();
@@ -588,41 +588,45 @@ public class PlayActivity extends BaseActivity {
         selectDialog.setAdapter(new SelectDialogAdapter.SelectDialogInterface<VodInfo.VodSeries>() {
             @Override
             public void click(VodInfo.VodSeries vs, int pos) {
+//                EventBus.getDefault().post(new RefreshEvent(RefreshEvent.TYPE_REFRESH, mVodInfo.playIndex));
+//                setTip("正在获取播放信息", true, false);
+//                String playTitleInfo = mVodInfo.name + " : " + vs.name;
+//                mController.setTitle(playTitleInfo);
+//                playSubtitleName = vs.subtitleName;
+//                stopParse();
+//                if (mVideoView != null) mVideoView.release();
+//                String subtitleCacheKey = mVodInfo.sourceKey + "-" + mVodInfo.id + "-" + mVodInfo.playFlag + "-" + mVodInfo.playIndex + "-" + vs.name + "-subt";
+//                String progressKey = mVodInfo.sourceKey + mVodInfo.id + mVodInfo.playFlag + mVodInfo.playIndex;
+//                //重新播放清除现有进度
+//                if (vs.url.startsWith("tvbox-drive://")) {
+//                    // takagen99: Quick Fix for Media Options in Drive playback
+//                    initPlayerDrive();
+//                    mController.showParse(false);
+//                    HashMap<String, String> headers = null;
+//                    params = new ArrayList<>();
+//                    if (mVodInfo.playerCfg != null && mVodInfo.playerCfg.length() > 0) {
+//                        JsonObject playerConfig = JsonParser.parseString(mVodInfo.playerCfg).getAsJsonObject();
+//                        if (playerConfig.has("headers")) {
+//                            headers = new HashMap<>();
+//                            for (JsonElement headerEl : playerConfig.getAsJsonArray("headers")) {
+//                                JsonObject headerJson = headerEl.getAsJsonObject();
+//                                headers.put(headerJson.get("name").getAsString(), headerJson.get("value").getAsString());
+//                                params.add(headerJson.get("name").getAsString() + "=" + headerJson.get("value").getAsString());
+//                            }
+//                        }
+//                    }
+//                    if (vs.subtitle !=null && vs.subtitle.indexOf("?")> -1) {
+//                        playSubtitle = vs.subtitle + "&filename" + vs.subtitleName + "$$" + TextUtils.join("&", params);
+//                    } else if (vs.subtitle != null) {
+//                        playSubtitle = vs.subtitle + "?filename="+vs.subtitleName + "$$" + TextUtils.join("&", params);
+//                    }
+//                    playUrl(vs.url.replace("tvbox-drive://", ""), headers);
+//                }
+//                selectDialog.dismiss();
                 EventBus.getDefault().post(new RefreshEvent(RefreshEvent.TYPE_REFRESH, mVodInfo.playIndex));
-                setTip("正在获取播放信息", true, false);
-                String playTitleInfo = mVodInfo.name + " : " + vs.name;
-                mController.setTitle(playTitleInfo);
-                playSubtitleName = vs.subtitleName;
-                stopParse();
-                if (mVideoView != null) mVideoView.release();
-                String subtitleCacheKey = mVodInfo.sourceKey + "-" + mVodInfo.id + "-" + mVodInfo.playFlag + "-" + mVodInfo.playIndex + "-" + vs.name + "-subt";
-                String progressKey = mVodInfo.sourceKey + mVodInfo.id + mVodInfo.playFlag + mVodInfo.playIndex;
-                //重新播放清除现有进度
-                if (vs.url.startsWith("tvbox-drive://")) {
-                    // takagen99: Quick Fix for Media Options in Drive playback
-                    initPlayerDrive();
-                    mController.showParse(false);
-                    HashMap<String, String> headers = null;
-                    params = new ArrayList<>();
-                    if (mVodInfo.playerCfg != null && mVodInfo.playerCfg.length() > 0) {
-                        JsonObject playerConfig = JsonParser.parseString(mVodInfo.playerCfg).getAsJsonObject();
-                        if (playerConfig.has("headers")) {
-                            headers = new HashMap<>();
-                            for (JsonElement headerEl : playerConfig.getAsJsonArray("headers")) {
-                                JsonObject headerJson = headerEl.getAsJsonObject();
-                                headers.put(headerJson.get("name").getAsString(), headerJson.get("value").getAsString());
-                                params.add(headerJson.get("name").getAsString() + "=" + headerJson.get("value").getAsString());
-                            }
-                        }
-                    }
-                    if (vs.subtitle !=null && vs.subtitle.indexOf("?")> -1) {
-                        playSubtitle = vs.subtitle + "&" + TextUtils.join("&", params);
-                    } else if (vs.subtitle != null) {
-                        playSubtitle = vs.subtitle + "?" + TextUtils.join("&", params);
-                    }
-                    playUrl(vs.url.replace("tvbox-drive://", ""), headers);
-                }
+                mVodInfo.playIndex = pos;
                 selectDialog.dismiss();
+                play(false);
             }
             @Override
             public String getDisplay(VodInfo.VodSeries val) {
