@@ -13,6 +13,9 @@ public class Sub {
     @SerializedName("format")
     private String format;
 
+    @SerializedName("ext")
+    private String ext;
+
     public static Sub create() {
         return new Sub();
     }
@@ -38,6 +41,7 @@ public class Sub {
     }
 
     public Sub ext(String ext) {
+        this.ext = ext;
         switch (ext) {
             case "vtt":
                 return format("text/vtt");
@@ -54,15 +58,14 @@ public class Sub {
     }
 
     public String getName() {
-
         return name;
+    }
+
+    public String getExt() {
+        return ext;
     }
 
     public String getLang() {
         return lang;
-    }
-
-    public String getFormat() {
-        return format;
     }
 }

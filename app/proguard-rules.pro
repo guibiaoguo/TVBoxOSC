@@ -185,8 +185,8 @@
 -dontwarn tv.danmaku.ijk.**
 
 # ExoPlayer
--keep class com.google.android.exoplayer2.** { *; }
--dontwarn com.google.android.exoplayer2.**
+-keep class com.google.androidx.media3.exoplayer.** { *; }
+-dontwarn com.google.androidx.media3.exoplayer.**
 
 # sardine webdav
 -keep class com.thegrizzlylabs.sardineandroid.** { *; }
@@ -215,7 +215,16 @@
 # magnet：解决模拟器推送 磁力链接 闪退
 -keep class com.xunlei.downloadlib.** {*;}
 
+# quickjs引擎
+-keep class com.whl.quickjs.** {*;}
 
--keep class com.github.tvbox.quickjs.** {*;}
-# 支持影视的ali相# quickjs引擎关的jar
+# 支持影视的ali相关的jar
 -keep class com.google.gson.**{*;}
+
+#阿里云播放器
+-keep class com.alivc.**{*;}
+-keep class com.aliyun.**{*;}
+-keep class com.cicada.**{*;}
+-dontwarn com.alivc.**
+-dontwarn com.aliyun.**
+-dontwarn com.cicada.**

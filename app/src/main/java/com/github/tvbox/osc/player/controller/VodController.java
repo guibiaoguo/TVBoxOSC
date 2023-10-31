@@ -283,7 +283,6 @@ public class VodController extends BaseController {
 
     public SimpleSubtitleView mSubtitleView;
     LinearLayout mAudioTrackBtn;
-    LinearLayout mVideoTrackBtn;
     TextView mPlayerTimeStartBtn;
     TextView mPlayerTimeSkipBtn;
     TextView mPlayerTimeStepBtn;
@@ -377,7 +376,6 @@ public class VodController extends BaseController {
         mSubtitleBtn = findViewById(R.id.play_subtitle);
         mSubtitleView = findViewById(R.id.subtitle_view);
         mAudioTrackBtn = findViewById(R.id.play_audio);
-        mVideoTrackBtn = findViewById(R.id.play_video);
         mPlayerTimeStartBtn = findViewById(R.id.play_time_start);
         mPlayerTimeSkipBtn = findViewById(R.id.play_time_end);
         mPlayerTimeStepBtn = findViewById(R.id.play_time_step);
@@ -625,6 +623,7 @@ public class VodController extends BaseController {
                     players.add(0);  // System
                     players.add(1);  // IJK
                     players.add(2);  // Exo
+                    players.add(3);  // Ali
                     if (mxPlayerExist) {
                         players.add(10);
                     }
@@ -726,13 +725,6 @@ public class VodController extends BaseController {
             public void onClick(View view) {
                 FastClickCheckUtil.check(view);
                 listener.selectAudioTrack();
-            }
-        });
-        mVideoTrackBtn.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                FastClickCheckUtil.check(view);
-                listener.selectVideoTrack();
             }
         });
         // Button : SKIP time start -----------------------------------------
@@ -846,7 +838,7 @@ public class VodController extends BaseController {
                     mTopRoot.setVisibility(GONE);
                     mBottomRoot.setVisibility(GONE);
                     mBack.setVisibility(GONE);
-                    mProgressTop.setVisibility(INVISIBLE);
+                    mProgressTop.setVisibility(GONE);
                     mHandler.removeCallbacks(mHideBottomRunnable);
                     ((DetailActivity) mActivity).toggleFullPreview();
                 } else {
@@ -938,7 +930,6 @@ public class VodController extends BaseController {
         void selectSubtitle();
 
         void selectAudioTrack();
-        void selectVideoTrack();
 
         void openVideo();
 
@@ -1348,7 +1339,7 @@ public class VodController extends BaseController {
         if (e.getAction() == MotionEvent.ACTION_UP) {
             if (fromLongPress) {
                 // Set back to Pause Icon
-                mProgressTop.setVisibility(INVISIBLE);
+                mProgressTop.setVisibility(GONE);
                 mPauseIcon.setImageResource(R.drawable.play_pause);
                 // Set back to current speed
                 mSpeed = currentSpeed;
@@ -1408,7 +1399,7 @@ public class VodController extends BaseController {
 
                 @Override
                 public void onAnimationEnd(Animator animation) {
-                    v.setVisibility(INVISIBLE);
+                    v.setVisibility(GONE);
                 }
 
                 @Override

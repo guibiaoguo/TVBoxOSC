@@ -6,7 +6,6 @@ import android.os.Message;
 import androidx.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.github.tvbox.osc.base.App;
 import com.github.tvbox.osc.cache.CacheManager;
@@ -83,7 +82,7 @@ public class DefaultSubtitleEngine implements SubtitleEngine {
 
                 String subtitlePath = subtitleLoadSuccessResult.subtitlePath;
                 if (subtitlePath.startsWith("http://") || subtitlePath.startsWith("https://")) {
-                    String subtitleFileCacheDir = App.getInstance().getExternalCacheDir().getAbsolutePath() + "/zimu/";
+                    String subtitleFileCacheDir = App.getInstance().getCacheDir().getAbsolutePath() + "/zimu/";
                     File cacheDir = new File(subtitleFileCacheDir);
                     if (!cacheDir.exists()) {
                         cacheDir.mkdirs();
@@ -91,13 +90,12 @@ public class DefaultSubtitleEngine implements SubtitleEngine {
                     String subtitleFile = subtitleFileCacheDir + subtitleLoadSuccessResult.fileName;
                     File cacheSubtitleFile = new File(subtitleFile);
                     boolean writeResult = FileUtils.writeSimple(subtitleLoadSuccessResult.content.getBytes(), cacheSubtitleFile);
-                    if (writeResult) {
-                        CacheManager.save(MD5.string2MD5(getPlaySubtitleCacheKey() != null ?getPlaySubtitleCacheKey(): path), subtitleFile);
+                    if (writeResult && playSubtitleCacheKey != null) {
+                        CacheManager.save(MD5.string2MD5(getPlaySubtitleCacheKey()), subtitleFile);
                     }
                 } else {
-                    CacheManager.save(MD5.string2MD5(getPlaySubtitleCacheKey() != null ?getPlaySubtitleCacheKey(): path), path);
+                    CacheManager.save(MD5.string2MD5(getPlaySubtitleCacheKey()), path);
                 }
-                Toast.makeText(App.getInstance(), "字幕加载成功", Toast.LENGTH_SHORT).show();
             }
 
             @Override

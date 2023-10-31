@@ -1,4 +1,5 @@
 apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
 
 def static buildTime() {
     return new Date().format("yyyyMMdd_HHmm", TimeZone.getTimeZone("GMT+08:00"))
@@ -9,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId 'com.github.tvbox.osc.debug'
-        minSdkVersion 16
+        minSdkVersion 21
         targetSdkVersion 33
         versionCode 1
         versionName "1.0.".concat(buildTime())
@@ -20,6 +21,8 @@ android {
                 arguments = ["room.schemaLocation": "$projectDir/schemas".toString()]
             }
         }
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     packagingOptions {
@@ -33,6 +36,7 @@ android {
 
             ndk {
                 abiFilters 'armeabi-v7a'
+                abiFilters 'arm64-v8a'
             }
         }
         release {
@@ -41,29 +45,31 @@ android {
 
             ndk {
                 abiFilters 'armeabi-v7a'
+                abiFilters 'arm64-v8a'
             }
         }
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 
     lintOptions {
         checkReleaseBuilds false
         abortOnError false
     }
-    dexOptions {
-        javaMaxHeapSize "4g"
-        additionalParameters += '--multi-dex'
-        additionalParameters += '--set-max-idx-number=48000'
-        additionalParameters += '--minimal-main-dex'
-    }
+    
     buildFeatures {
         dataBinding = true
     }
 
+    testOptions {
+        unitTests {
+            includeAndroidResources = true
+            unitTests.returnDefaultValues = true
+        }
+    }
 //    splits {
 //        abi {
 //            enable true
@@ -86,7 +92,9 @@ dependencies {
             because("kotlin-stdlib-jdk8 is now a part of kotlin-stdlib")
         }
     }
-    api fileTree(dir: "libs", include: ["*.jar"])
+    api fileTree(dir: "libs", include: ['*.jar', '*.aar'])
+    implementation 'org.conscrypt:conscrypt-android:2.5.2'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     // for WebDAV
     implementation('com.github.thegrizzlylabs:sardine-android:0.8') {
         exclude group: 'com.squareup.okhttp3'
@@ -98,13 +106,13 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
     implementation 'androidx.recyclerview:recyclerview:1.3.0'
-    implementation 'com.google.android.material:material:1.8.0'
+    implementation 'com.google.android.material:material:1.4.0'
     implementation files('libs\\thunder.jar')
 
     annotationProcessor 'androidx.room:room-compiler:2.5.1'
     implementation 'androidx.room:room-runtime:2.5.1'
     implementation 'androidx.multidex:multidex:2.0.1'
-    implementation 'com.squareup.okhttp3:okhttp:4.10.0'
+    implementation 'com.squareup.okhttp3:okhttp:3.12.11'
     implementation 'com.squareup.okio:okio:3.3.0'
     implementation 'com.github.CymChad:BaseRecyclerViewAdapterHelper:2.9.49-androidx'
     implementation 'com.kingja.loadsir:loadsir:1.3.8'
@@ -116,19 +124,19 @@ dependencies {
     }
     implementation 'org.greenrobot:eventbus:3.3.1'
     implementation 'com.orhanobut:hawk:2.0.1'
-
+    implementation 'net.sourceforge.streamsupport:android-retrofuture:1.7.4'
     implementation 'androidx.annotation:annotation:1.6.0'
-    implementation "com.google.android.exoplayer:exoplayer-core:2.18.5"
-    implementation "com.google.android.exoplayer:exoplayer-dash:2.18.5"
-    implementation "com.google.android.exoplayer:exoplayer-hls:2.18.5"
-    implementation "com.google.android.exoplayer:exoplayer-rtsp:2.18.5"
-    implementation "com.google.android.exoplayer:extension-rtmp:2.18.5"
+    implementation "androidx.media3:media3-exoplayer:1.1.1"
+    implementation "androidx.media3:media3-exoplayer-dash:1.1.1"
+    implementation "androidx.media3:media3-exoplayer-hls:1.1.1"
+    implementation "androidx.media3:media3-exoplayer-rtsp:1.1.1"
+    implementation "androidx.media3:media3-datasource-rtmp:1.1.1"
     //implementation 'com.google.android.exoplayer:extension-okhttp:' + rootProject.ext.exoVersion
 
+    implementation "com.aliyun.sdk.android:AliyunPlayer:5.5.1.0-full"
+    implementation 'com.alivc.conan:AlivcConan:0.9.5'
     implementation 'xyz.doikki.android.dkplayer:dkplayer-ui:3.3.7'
-    implementation 'xyz.doikki.android.dkplayer:videocache:3.3.7'
-
-    implementation project(":quickjs")
+    implementation 'xyz.doikki.android.dkplayer:videocache:3.3.7'    
 
     implementation('org.xwalk:xwalk_shared_library:23.53.589.4') {
         exclude group: 'com.android.support'
@@ -143,9 +151,17 @@ dependencies {
     implementation 'com.googlecode.juniversalchardet:juniversalchardet:1.0.3'
     implementation 'org.apache.commons:commons-text:1.10.0'
     implementation 'com.github.seven332:jcifs:1.3.19'
+    implementation 'org.conscrypt:conscrypt-android:2.5.2'
     configurations {
         all {
             exclude group: 'xpp3', module: 'xpp3'
         }
     }
+    //test框架
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+//    implementation 'com.google.android.material:material:1.8.0'
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+
 }

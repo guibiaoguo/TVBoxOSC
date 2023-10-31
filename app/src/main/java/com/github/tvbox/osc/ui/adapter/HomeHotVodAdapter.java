@@ -9,11 +9,14 @@ import android.widget.TextView;
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.BaseViewHolder;
 import com.github.tvbox.osc.R;
+import com.github.tvbox.osc.api.ApiConfig;
 import com.github.tvbox.osc.bean.Movie;
+import com.github.tvbox.osc.bean.SourceBean;
 import com.github.tvbox.osc.picasso.RoundTransformation;
 import com.github.tvbox.osc.util.DefaultConfig;
 import com.github.tvbox.osc.util.HawkConfig;
 import com.github.tvbox.osc.util.MD5;
+import com.orhanobut.hawk.Hawk;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -35,6 +38,16 @@ public class HomeHotVodAdapter extends BaseQuickAdapter<Movie.Video, BaseViewHol
             tvDel.setVisibility(View.VISIBLE);
         } else {
             tvDel.setVisibility(View.GONE);
+        }
+
+        // check if set as last watched
+        TextView tvYear = helper.getView(R.id.tvYear);
+        if (Hawk.get(HawkConfig.HOME_REC, 0) == 2) {
+            tvYear.setVisibility(View.VISIBLE);
+            SourceBean source = ApiConfig.get().getSource(item.sourceKey);
+            tvYear.setText(source!=null?source.getName():"");
+        } else {
+            tvYear.setVisibility(View.GONE);
         }
 
         TextView tvRate = helper.getView(R.id.tvNote);

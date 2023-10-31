@@ -54,6 +54,7 @@ import com.github.tvbox.osc.util.HawkConfig;
 import com.github.tvbox.osc.util.MD5;
 import com.github.tvbox.osc.util.SearchHelper;
 import com.github.tvbox.osc.util.SubtitleHelper;
+import com.github.tvbox.osc.util.thunder.Thunder;
 import com.github.tvbox.osc.viewmodel.SourceViewModel;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -295,7 +296,8 @@ public class DetailActivity extends BaseActivity {
                 //获取剪切板管理器
                 ClipboardManager cm = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
                 //设置内容到剪切板
-                cm.setPrimaryClip(ClipData.newPlainText(null, vodInfo.seriesMap.get(vodInfo.playFlag).get(0).url));
+//                cm.setPrimaryClip(ClipData.newPlainText(null, vodInfo.seriesMap.get(vodInfo.playFlag).get(0).url));
+                cm.setPrimaryClip(ClipData.newPlainText(null, vodInfo.seriesMap.get(vodInfo.playFlag).get(vodInfo.playIndex).url));
                 Toast.makeText(DetailActivity.this, getString(R.string.det_url), Toast.LENGTH_SHORT).show();
             }
         });
@@ -847,6 +849,7 @@ public class DetailActivity extends BaseActivity {
         OkGo.getInstance().cancelTag("quick_search");
         OkGo.getInstance().cancelTag("pushVod");
         EventBus.getDefault().unregister(this);
+        if (!showPreview) Thunder.stop(true);
     }
 
     boolean PiPON = Hawk.get(HawkConfig.PIC_IN_PIC, false);
@@ -890,7 +893,7 @@ public class DetailActivity extends BaseActivity {
                         DetailActivity.this,
                         actionCode,
                         new Intent("PIP_VOD_CONTROL").putExtra("action", actionCode),
-                        0);
+                        PendingIntent.FLAG_IMMUTABLE);
         final Icon icon = Icon.createWithResource(DetailActivity.this, iconResId);
         return (new RemoteAction(icon, title, desc, intent));
     }
