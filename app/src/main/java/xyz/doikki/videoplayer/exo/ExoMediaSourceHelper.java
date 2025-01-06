@@ -28,10 +28,14 @@ import androidx.media3.extractor.DefaultExtractorsFactory;
 import androidx.media3.extractor.ExtractorsFactory;
 import androidx.media3.extractor.ts.DefaultTsPayloadReaderFactory;
 import androidx.media3.extractor.ts.TsExtractor;
+
+import com.github.tvbox.osc.util.FileUtils;
 import com.google.androidx.media3.exoplayer.ext.okhttp.OkHttpDataSource;
 
 import java.io.File;
 import java.lang.reflect.Field;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.util.Map;
 
 import okhttp3.OkHttpClient;
@@ -43,6 +47,7 @@ public final class ExoMediaSourceHelper {
     private final String mUserAgent;
     private final Context mAppContext;
     private OkHttpDataSource.Factory mHttpDataSourceFactory;
+    private OkHttpDataSource.Factory mHttpDataSourceFactoryNoProxy;
     private OkHttpClient mOkClient = null;
     private Cache mCache;
 
@@ -161,7 +166,7 @@ public final class ExoMediaSourceHelper {
     @SuppressLint("UnsafeOptInUsageError")
     private Cache newCache() {
         return new SimpleCache(
-                new File(mAppContext.getExternalCacheDir(), "exo-video-cache"),//缓存目录
+                new File(FileUtils.getExternalCachePath(), "exo-video-cache"),//缓存目录
                 new LeastRecentlyUsedCacheEvictor(512 * 1024 * 1024),//缓存大小，默认512M，使用LRU算法实现
                 new StandaloneDatabaseProvider(mAppContext));
     }
@@ -186,6 +191,7 @@ public final class ExoMediaSourceHelper {
             mHttpDataSourceFactory = new OkHttpDataSource.Factory(mOkClient)
                     .setUserAgent(mUserAgent)/*
                     .setAllowCrossProtocolRedirects(true)*/;
+            mHttpDataSourceFactoryNoProxy = mHttpDataSourceFactory;
         }
         return mHttpDataSourceFactory;
     }
@@ -217,5 +223,14 @@ public final class ExoMediaSourceHelper {
 
     public void setCache(Cache cache) {
         this.mCache = cache;
+    }
+
+    public void setSocksProxy(String server, int port) {
+        Proxy proxy = new Proxy(Proxy.Type.SOCKS, new InetSocketAddress(server, port));
+        mHttpDataSourceFactory = new OkHttpDataSource.Factory(mOkClient.newBuilder().proxy(proxy).build())
+                .setUserAgent(mUserAgent);
+    }
+    public void clearSocksProxy() {
+        mHttpDataSourceFactory = mHttpDataSourceFactoryNoProxy;
     }
 }

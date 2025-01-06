@@ -11,10 +11,11 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <com.google.android.exoplayer2.ui.SubtitleView
-        android:id="@+id/sub_title_view"
+    <master.flame.danmaku.ui.widget.DanmakuView
+        android:id="@+id/danmaku"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:visibility="gone" />
 
     <ProgressBar
         android:id="@+id/play_loading"

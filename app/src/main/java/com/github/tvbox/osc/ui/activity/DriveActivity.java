@@ -32,11 +32,11 @@ import com.github.tvbox.osc.ui.dialog.WebdavDialog;
 import com.github.tvbox.osc.util.FastClickCheckUtil;
 import com.github.tvbox.osc.util.HawkConfig;
 import com.github.tvbox.osc.util.StorageDriveType;
+import com.github.tvbox.osc.util.StringUtils;
 import com.github.tvbox.osc.viewmodel.drive.AbstractDriveViewModel;
 import com.github.tvbox.osc.viewmodel.drive.AlistDriveViewModel;
 import com.github.tvbox.osc.viewmodel.drive.LocalDriveViewModel;
 import com.github.tvbox.osc.viewmodel.drive.WebDAVDriveViewModel;
-import com.github.tvbox.osc.util.StringUtils;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -132,7 +132,7 @@ public class DriveActivity extends BaseActivity {
                 dialog.setTip("请选择存盘类型");
                 dialog.setItemCheckDisplay(false);
                 String[] typeNames = StorageDriveType.getTypeNames();
-                dialog.setAdapter(new SelectDialogAdapter.SelectDialogInterface<StorageDriveType.TYPE>() {
+                dialog.setAdapter(null, new SelectDialogAdapter.SelectDialogInterface<StorageDriveType.TYPE>() {
                     @Override
                     public void click(StorageDriveType.TYPE value, int pos) {
                         if (value == StorageDriveType.TYPE.LOCAL) {
@@ -303,7 +303,7 @@ public class DriveActivity extends BaseActivity {
         int sort = Hawk.get(HawkConfig.STORAGE_DRIVE_SORT, 0);
         SelectDialog<String> dialog = new SelectDialog<>(DriveActivity.this);
         dialog.setTip("请选择列表排序方式");
-        dialog.setAdapter(new SelectDialogAdapter.SelectDialogInterface<String>() {
+        dialog.setAdapter(null, new SelectDialogAdapter.SelectDialogInterface<String>() {
             @Override
             public void click(String value, int pos) {
                 sortType = pos;
@@ -474,7 +474,7 @@ public class DriveActivity extends BaseActivity {
                 });
             }
         });
-        if(StringUtils.isNotEmpty(path)) {
+        if (StringUtils.isNotEmpty(path)) {
             this.txtTitle.setText(path);
         }
     }
@@ -519,7 +519,8 @@ public class DriveActivity extends BaseActivity {
     public void onBackPressed() {
         if (viewModel != null) {
             cancel();
-            mGridView.onClick(mGridView.getChildAt(0));
+//            mGridView.onClick(mGridView.getChildAt(0));
+            returnPreviousFolder();
             return;
         }
         if (!delMode)

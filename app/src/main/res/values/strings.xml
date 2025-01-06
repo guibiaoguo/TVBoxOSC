@@ -12,7 +12,7 @@
     <string name="hm_exit">Press BACK again to EXIT</string>
     <string name="hm_exit_live">Press BACK again to exit LiveTV</string>
     <string name="hm_date1">dd MMM</string>
-    <string name="hm_date2">EE hh:mm aa</string>
+    <string name="hm_date2">EE HH:mm</string>
     <string name="hm_hist">History</string>
     <string name="hm_live">LiveTV</string>
     <string name="hm_search">Search</string>
@@ -45,6 +45,7 @@
     <string name="det_actor">Cast</string>
     <string name="det_dir">Director</string>
     <string name="det_des"></string>
+    <string name="det_desc">intro</string>
 
     // Settings Menu Page //
     <string name="mn_config">Configuration Address</string>
@@ -53,6 +54,7 @@
     <string name="mn_home_type">Type</string>
     <string name="mn_icon">Button</string>
     <string name="mn_history_num">History</string>
+    <string name="mn_live_boot">Autostart Live</string>
     <string name="mn_wall_change">Wallpaper</string>
     <string name="mn_wall_load">Loading Wallpaper</string>
     <string name="mn_wall_reset">Reset</string>
@@ -60,7 +62,7 @@
     <string name="mn_play_decode">Decode</string>
     <string name="mn_search">Search Display</string>
     <string name="mn_ratio">Screen Ratio</string>
-    <string name="mn_pip">PIP</string>
+    <string name="mn_bgplay">Bgplay</string>
     <string name="mn_preview">Preview Window</string>
     <string name="mn_webview">WebView</string>
     <string name="mn_render">Render</string>
@@ -69,7 +71,10 @@
     <string name="mn_locale">Language</string>
     <string name="mn_theme">Theme</string>
     <string name="mn_about">About</string>
-    <string name="mn_purify">Purify</string>
+    <string name="mn_purify">Skip Ad</string>
+    <string name="mn_ijk_cache_play">IJK Cache</string>
+    <string name="mn_reset">resetApp</string>
+    <string name="mn_fastsearch">FastSearch</string>
 
     // Settings Dialog Pop-Up //
     <string name="dia_source">Select Source</string>
@@ -90,6 +95,9 @@
     <string name="dia_locale">Select Language</string>
     <string name="dia_theme">Select Theme</string>
     <string name="dia_confirm">Confirm to Clear All ?</string>
+    <string name="dia_reset">Reset Clear Configuration</string>
+    <string name="dia_media_setting_title">Media Setting</string>
+
 
     // Settings Backup Restore Page //
     <string name="set_bkup_ok">Backup Success</string>
@@ -115,6 +123,9 @@
     <string name="act_hist">History</string>
     <string name="act_hist_sel">Select to Remove</string>
     <string name="act_hist_rm">Remove</string>
+    <string name="act_live_play_empty_live_url">The live url is not configured, please go to the settings page to configure it</string>
+    <string name="act_live_play_empty_channel">The channel list is empty</string>
+    <string name="act_live_play_network_error">The network request for the live-streaming address failed</string>
     <string name="act_search">Search</string>
     <string name="act_search_clr">Clear</string>
     <string name="act_search_del">Backspace</string>
@@ -135,6 +146,9 @@
     // Fast Search Page //
     <string name="fs_show_all">All</string>
     <string name="fs_results">Search Results</string>
+    <string name="global_search">global search</string>
+    <string name="search">search</string>
+    <string name="Select_source">Select source</string>
 
     // VOD //
     <string name="vod_audio">Select Audio Track</string>
@@ -151,6 +165,7 @@
     <string name="vod_sub_delay">Delay</string>
     <string name="vod_sub_search">Search</string>
     <string name="vod_sub_off">Subtitle Off</string>
+    <string name="vod_sub_on">Subtitle On</string>
     <string name="vod_remaining_time">Remaining Time</string>
     <string name="vod_ends_at">Ends at</string>
 
@@ -173,6 +188,10 @@
     <string name="exo_track_role_closed_captions">CC</string>
     <string name="exo_track_bitrate">%1$.2f Mbps</string>
     <string name="exo_item_list">%1$s，%2$s</string>
+    <string name="sub_size">Size</string>
+    <string name="sub_delay">Delay</string>
+    <string name="sub_style">Style</string>
+    <string name="sub_style_text">ABC.</string>
 
     <string-array name="doh_name">
         <item>System</item>
@@ -187,5 +206,70 @@
         <item>https://dns.alidns.com/dns-query</item>
         <item>https://doh.360.cn/dns-query</item>
     </string-array>
+
+    <!-- 视频设置 相关数据 -->
+    <string-array name="media_title_tag">
+        <item>General</item>
+        <item>ExoPlayer</item>
+        <item>IjkPlayer</item>
+    </string-array>
+
+    <string-array name="media_title">
+        <item>General</item>
+        <item>EXO</item>
+        <item>IJK</item>
+    </string-array>
+
+    <!--    用于解释怎么处理数据  -->
+    <string-array name="media_content_tag_General">
+        <item>VodPlayerPreferred</item>
+    </string-array>
+
+    <string-array name="media_content_tag_ExoPlayer">
+        <item>ExoRenderer</item>
+<!--        <item>ExoRendererMode</item>-->
+    </string-array>
+
+    <string-array name="media_content_tag_IjkPlayer">
+        <item>IjkMediaCodecMode</item>
+        <item>IjkCache</item>
+    </string-array>
+
+    <!--    用于展示名称-->
+    <string-array name="media_content_General">
+        <item>VodPlayerPreferred</item>
+        <!--        用于强制使用设置中的配置 比如设置 首选设置配置 ,首选配置文件 优先单独设置的就不管-->
+    </string-array>
+
+
+    <string-array name="media_content_ExoPlayer">
+        <!--  渲染器选择  -->
+        <item>Renderer</item>
+<!--        &lt;!&ndash;首选 扩展渲染器 核心渲染器 关 &ndash;&gt;-->
+<!--        <item>RendererMode</item>-->
+    </string-array>
+
+    <string-array name="media_content_IjkPlayer">
+        <item>MediaCodecMode</item>
+        <item>Cache</item>
+    </string-array>
+
+    <string-array name="media_content_ExoPlayer_renderer">
+        <item>Default</item>
+        <item>NextLib</item>
+    </string-array>
+
+    <string-array name="media_content_ExoPlayer_renderer_mode">
+        <item>Prefer core renderer</item>
+        <item>Prefer extension renderer</item>
+        <item>extended renderers are not allowed</item>
+    </string-array>
+
+    <string-array name="media_content_General_VodPlayerPreferred">
+        <item>Prefer configuration address</item>
+        <item>Prefer setting configuration</item>
+    </string-array>
+
+    <!-- 结束 视频设置 相关配置 -->
 
 </resources>

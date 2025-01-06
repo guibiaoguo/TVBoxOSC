@@ -2,10 +2,11 @@ package com.github.tvbox.osc.ui.dialog;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.util.Log;
+import android.view.ViewTreeObserver;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.DiffUtil;
 
 import com.github.tvbox.osc.R;
@@ -43,19 +44,27 @@ public class SelectDialog<T> extends BaseDialog {
         ((TextView) findViewById(R.id.title)).setText(tip);
     }
 
-    public void setAdapter(SelectDialogAdapter.SelectDialogInterface<T> sourceBeanSelectDialogInterface, DiffUtil.ItemCallback<T> sourceBeanItemCallback, List<T> data, int select) {
+    public void setAdapter(TvRecyclerView tvRecyclerView, SelectDialogAdapter.SelectDialogInterface<T> sourceBeanSelectDialogInterface, DiffUtil.ItemCallback<T> sourceBeanItemCallback, List<T> data, int select) {
         if (select >= data.size() || select < 0) select = 0;//if source update, data item count maybe smaller than before
         final int selectIdx = select;
-        SelectDialogAdapter<T> adapter = new SelectDialogAdapter(sourceBeanSelectDialogInterface, sourceBeanItemCallback, muteCheck);
+        SelectDialogAdapter<T> adapter = new SelectDialogAdapter<>(sourceBeanSelectDialogInterface, sourceBeanItemCallback, muteCheck);
         adapter.setData(data, select);
-        TvRecyclerView tvRecyclerView = ((TvRecyclerView) findViewById(R.id.list));
+        if(tvRecyclerView == null){
+            tvRecyclerView = findViewById(R.id.list);
+        }
         tvRecyclerView.setAdapter(adapter);
         tvRecyclerView.setSelectedPosition(select);
+        if (select<10){
+            tvRecyclerView.setSelection(select);
+        }
+        TvRecyclerView finalTvRecyclerView = tvRecyclerView;
         tvRecyclerView.post(new Runnable() {
             @Override
-            public void run() {
-                tvRecyclerView.scrollToPosition(selectIdx);
-                tvRecyclerView.setSelectionWithSmooth(selectIdx);
+            public void run() {//不清楚会不会存在什么问题
+                if (selectIdx >= 10) {
+                    finalTvRecyclerView.smoothScrollToPosition(selectIdx);
+                    finalTvRecyclerView.setSelectionWithSmooth(selectIdx);
+                }
             }
         });
     }

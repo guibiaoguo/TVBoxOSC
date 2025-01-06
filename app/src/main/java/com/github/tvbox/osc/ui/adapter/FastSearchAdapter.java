@@ -8,9 +8,8 @@ import com.chad.library.adapter.base.BaseViewHolder;
 import com.github.tvbox.osc.R;
 import com.github.tvbox.osc.api.ApiConfig;
 import com.github.tvbox.osc.bean.Movie;
-import com.github.tvbox.osc.picasso.RoundTransformation;
-import com.github.tvbox.osc.util.MD5;
-import com.squareup.picasso.Picasso;
+import com.github.tvbox.osc.util.DefaultConfig;
+import com.github.tvbox.osc.util.ImgUtil;
 
 import java.util.ArrayList;
 
@@ -33,18 +32,10 @@ public class FastSearchAdapter extends BaseQuickAdapter<Movie.Video, BaseViewHol
         }
         ImageView ivThumb = helper.getView(R.id.ivThumb);
         if (!TextUtils.isEmpty(item.pic)) {
-            Picasso.get()
-                    .load(item.pic)
-                    .transform(new RoundTransformation(MD5.string2MD5(item.pic + "position=" + helper.getLayoutPosition()))
-                            .centerCorp(true)
-                            .override(AutoSizeUtils.mm2px(mContext, 300), AutoSizeUtils.mm2px(mContext, 400))
-                            .roundRadius(AutoSizeUtils.mm2px(mContext, 15), RoundTransformation.RoundType.ALL))
-                    .placeholder(R.drawable.img_loading_placeholder)
-                    .error(R.drawable.img_loading_placeholder)
-                    .into(ivThumb);
+            // takagen99 : Use Glide instead
+            ImgUtil.load(item.pic, ivThumb, 14);
         } else {
             ivThumb.setImageResource(R.drawable.img_loading_placeholder);
         }
-
     }
 }

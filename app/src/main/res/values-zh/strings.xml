@@ -12,7 +12,7 @@
     <string name="hm_exit">再按一次返回键退出应用</string>
     <string name="hm_exit_live">再按一次返回键退出直播</string>
     <string name="hm_date1">MM月dd日</string>
-    <string name="hm_date2">EE hh:mm aa</string>
+    <string name="hm_date2">EE HH:mm</string>
     <string name="hm_hist">历史</string>
     <string name="hm_live">直播</string>
     <string name="hm_search">搜索</string>
@@ -45,6 +45,7 @@
     <string name="det_actor">演员</string>
     <string name="det_dir">导演</string>
     <string name="det_des"></string>
+    <string name="det_desc">简介</string>
 
     // Settings Menu Page //
     <string name="mn_config">配置地址</string>
@@ -53,6 +54,7 @@
     <string name="mn_home_type">推荐</string>
     <string name="mn_icon">按钮位置</string>
     <string name="mn_history_num">历史条数</string>
+    <string name="mn_live_boot">启动时进直播</string>
     <string name="mn_wall_change">换张壁纸</string>
     <string name="mn_wall_load">壁纸更换中</string>
     <string name="mn_wall_reset">重置壁纸</string>
@@ -60,7 +62,7 @@
     <string name="mn_play_decode">IJK解码</string>
     <string name="mn_search">搜索展示</string>
     <string name="mn_ratio">画面缩放</string>
-    <string name="mn_pip">画中画</string>
+    <string name="mn_bgplay">后台</string>
     <string name="mn_preview">窗口预览</string>
     <string name="mn_webview">嗅探Webview</string>
     <string name="mn_render">渲染方式</string>
@@ -69,7 +71,10 @@
     <string name="mn_locale">语言</string>
     <string name="mn_theme">主题</string>
     <string name="mn_about">关于</string>
-    <string name="mn_purify">净化</string>
+    <string name="mn_purify">广告过滤</string>
+    <string name="mn_ijk_cache_play">IJK缓存</string>
+    <string name="mn_reset">重置</string>
+    <string name="mn_fastsearch">聚搜</string>
 
     // Settings Dialog Pop-Up //
     <string name="dia_source">请选择数据源</string>
@@ -90,6 +95,8 @@
     <string name="dia_locale">请选择应用语言</string>
     <string name="dia_theme">请选择主题</string>
     <string name="dia_confirm">确定全部删除 ?</string>
+    <string name="dia_reset">确定重置将清除配置</string>
+    <string name="dia_media_setting_title">播放器设置</string>
 
     // Settings Backup Restore Page //
     <string name="set_bkup_ok">备份成功!</string>
@@ -115,6 +122,9 @@
     <string name="act_hist">历史记录</string>
     <string name="act_hist_sel">确定键删除当前选中记录</string>
     <string name="act_hist_rm">删除记录</string>
+    <string name="act_live_play_empty_live_url">直播地址未配置，请前往设置界面配置哦</string>
+    <string name="act_live_play_empty_channel">频道列表为空</string>
+    <string name="act_live_play_network_error">直播地址网络请求失败</string>
     <string name="act_search">搜索</string>
     <string name="act_search_clr">清空</string>
     <string name="act_search_del">删除</string>
@@ -135,6 +145,9 @@
     // Fast Search Page //
     <string name="fs_show_all">全部显示</string>
     <string name="fs_results">搜索结果</string>
+    <string name="global_search">全局搜索</string>
+    <string name="search">搜索</string>
+    <string name="Select_source">选择搜索源</string>
 
     // VOD //
     <string name="vod_audio">切换音轨</string>
@@ -151,6 +164,7 @@
     <string name="vod_sub_delay">延迟</string>
     <string name="vod_sub_search">搜索</string>
     <string name="vod_sub_off">字幕已关闭</string>
+    <string name="vod_sub_on">字幕已开启</string>
     <string name="vod_remaining_time">影片剩余</string>
     <string name="vod_ends_at">影片结束</string>
 
@@ -174,4 +188,43 @@
     <string name="exo_track_bitrate">%1$.2f Mbps</string>
     <string name="exo_item_list">%1$s，%2$s</string>
 
+    <string name="sub_size">大小</string>
+    <string name="sub_delay">偏移</string>
+    <string name="sub_style">样式</string>
+    <string name="sub_style_text">字幕</string>
+
+    <string-array name="media_title">
+        <item>通用</item>
+        <item>EXO</item>
+        <item>IJK</item>
+    </string-array>
+
+    <string-array name="media_content_General" >
+        <item>点播播放器首选</item>
+    </string-array>
+    <string-array name="media_content_IjkPlayer">
+        <item>解码模式</item>
+        <item>缓存</item>
+    </string-array>
+
+    <string-array name="media_content_ExoPlayer">
+        <item>渲染器</item>
+<!--        <item>渲染器模式</item>-->
+    </string-array>
+
+    <string-array name="media_content_ExoPlayer_renderer">
+        <item>默认</item>
+        <item>NextLib</item>
+    </string-array>
+
+    <string-array name="media_content_ExoPlayer_renderer_mode">
+        <item>首选核心渲染器</item>
+        <item>首选扩展渲染器</item>
+        <item>不允许使用扩展渲染器</item>
+    </string-array>
+
+    <string-array name="media_content_General_VodPlayerPreferred">
+        <item>首选配置地址</item>
+        <item>首选设置配置</item>
+    </string-array>
 </resources>
