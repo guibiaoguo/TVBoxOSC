@@ -44,4 +44,8 @@ public class LiveChannelGroup {
     public void setGroupPassword(String groupPassword) {
         this.groupPassword = groupPassword;
     }
+
+    public boolean isKeep() {
+        return getGroupName().equals("收藏");
+    }
 }

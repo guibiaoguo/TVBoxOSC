@@ -632,7 +632,7 @@ public class ApiConfig {
 
     public void loadLives(JsonArray livesArray) {
         liveChannelGroupList.clear();
-        int groupIndex = 0;
+        int groupIndex = 1;
         int channelIndex = 0;
         int channelNum = 0;
         for (JsonElement groupElement : livesArray) {

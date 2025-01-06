@@ -38,6 +38,8 @@ import com.github.tvbox.osc.bean.LiveEpgDate;
 import com.github.tvbox.osc.bean.LivePlayerManager;
 import com.github.tvbox.osc.bean.LiveSettingGroup;
 import com.github.tvbox.osc.bean.LiveSettingItem;
+import com.github.tvbox.osc.cache.LiveCollect;
+import com.github.tvbox.osc.cache.RoomDataManger;
 import com.github.tvbox.osc.event.RefreshEvent;
 import com.github.tvbox.osc.player.controller.LiveController;
 import com.github.tvbox.osc.ui.adapter.ApiHistoryDialogAdapter;
@@ -56,6 +58,7 @@ import com.github.tvbox.osc.util.HawkConfig;
 import com.github.tvbox.osc.util.HawkUtils;
 import com.github.tvbox.osc.util.JavaUtil;
 import com.github.tvbox.osc.util.live.TxtSubscribe;
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.lzy.okgo.OkGo;
 import com.lzy.okgo.callback.AbsCallback;
@@ -85,6 +88,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.TimeZone;
 
 import kotlin.Pair;
@@ -1445,6 +1449,45 @@ public class LivePlayActivity extends BaseActivity {
             }
         });
 
+        liveChannelItemAdapter.setOnItemLongClickListener(new BaseQuickAdapter.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(BaseQuickAdapter adapter, View view, int position) {
+                LiveChannelItem liveChannelItem = liveChannelItemAdapter.getItem(position);
+                String channelName = liveChannelItem.getChannelName();
+                Boolean favor = !liveChannelItemAdapter.getItem(position).isFavor();
+                LiveCollect liveCollect = RoomDataManger.getLiveCollect(channelName);
+                if (liveCollect != null ) {
+                    RoomDataManger.deleteLiveCollect(channelName);
+                    liveChannelItem.setFavor(favor);
+                    liveChannelGroupList.get(0).getLiveChannels().remove(liveChannelItem);
+                    Toast.makeText(App.getInstance(), channelName + "取消收藏", Toast.LENGTH_SHORT).show();
+                } else {
+                    liveCollect = new LiveCollect();
+                    liveCollect.channelName = channelName;
+                    liveCollect.channelIndex = liveChannelItem.getChannelIndex();
+                    liveCollect.channelNum = liveChannelItem.getChannelNum();
+                    liveCollect.updateTime = System.currentTimeMillis();
+                    liveCollect.channelUrls = new Gson().toJson(liveChannelItem.getChannelUrls());
+                    liveCollect.channelSourceNames = new Gson().toJson(liveChannelItem.getChannelSourceNames());
+                    RoomDataManger.insertLiveCollect(liveCollect);
+                    liveChannelItem.setFavor(favor);
+                    liveChannelGroupList.get(0).getLiveChannels().add(liveChannelItem);
+                    Toast.makeText(App.getInstance(), channelName + "已收藏", Toast.LENGTH_SHORT).show();
+                }
+                mHandler.post(() -> {
+                    if (liveChannelGroupAdapter.getSelectedGroupIndex() !=0) {
+                        List<LiveChannelItem> liveChannelItems = liveChannelItemAdapter.getData();
+                        liveChannelGroupList.get(liveChannelGroupAdapter.getSelectedGroupIndex()).setLiveChannels((ArrayList<LiveChannelItem>) liveChannelItems);
+//                    liveChannelItemAdapter.setFocusedChannelIndex(position);
+                    }
+                    mHandler.removeCallbacks(mHideChannelListRun);
+                    mHandler.post(mHideChannelListRun);
+                });
+//                showChannelList();
+                return true;
+            }
+        });
+
         //手机/模拟器
         liveChannelItemAdapter.setOnItemClickListener(new BaseQuickAdapter.OnItemClickListener() {
             @Override
@@ -1833,7 +1876,24 @@ public class LivePlayActivity extends BaseActivity {
         showNetSpeed();
         tvLeftChannelListLayout.setVisibility(View.INVISIBLE);
         tvRightSettingLayout.setVisibility(View.INVISIBLE);
-
+        LiveChannelGroup keep = new LiveChannelGroup();
+        keep.setGroupName("收藏");
+        keep.setGroupIndex(0);
+        keep.setGroupPassword("");
+        List<LiveCollect> liveCollects = RoomDataManger.getAllLiveCollect();
+        ArrayList<LiveChannelItem> liveChannelItems = new ArrayList<>();
+        for(LiveCollect liveCollect:liveCollects){
+            LiveChannelItem channelItem = new LiveChannelItem();
+            channelItem.setChannelName(liveCollect.channelName);
+            channelItem.setChannelIndex(liveCollect.channelIndex);
+            channelItem.setChannelNum(liveCollect.channelNum);
+            channelItem.setChannelUrls(new Gson().fromJson(liveCollect.channelUrls,ArrayList.class));
+            channelItem.setFavor(true);
+            channelItem.setChannelSourceNames(new Gson().fromJson(liveCollect.channelSourceNames,ArrayList.class));
+            liveChannelItems.add(channelItem);
+        }
+        keep.setLiveChannels(liveChannelItems);
+        liveChannelGroupList.add(0,keep);
         liveChannelGroupAdapter.setNewData(liveChannelGroupList);
         selectChannelGroup(lastChannelGroupIndex, false, lastLiveChannelIndex);
     }
@@ -1965,6 +2025,22 @@ public class LivePlayActivity extends BaseActivity {
     }
 
     private void loadChannelGroupDataAndPlay(int groupIndex, int liveChannelIndex) {
+        ArrayList<LiveChannelItem> lastChannel = liveChannelGroupList.get(groupIndex).getLiveChannels();
+        ArrayList<LiveChannelItem> keepChannel = liveChannelGroupList.get(0).getLiveChannels();
+        Map<String,LiveChannelItem> keepMap = new HashMap<>();
+        for (LiveChannelItem liveChannelItem:keepChannel) {
+            keepMap.put(liveChannelItem.getChannelName(),liveChannelItem);
+        }
+        if (groupIndex !=0) {
+            for (LiveChannelItem liveChannelItem:lastChannel) {
+                String channelName = liveChannelItem.getChannelName();
+                if (keepMap.get(channelName) != null) {
+                    liveChannelItem.setFavor(true);
+                } else {
+                    liveChannelItem.setFavor(false);
+                }
+            }
+        }
         liveChannelItemAdapter.setNewData(getLiveChannels(groupIndex));
         if (groupIndex == currentChannelGroupIndex) {
             if (currentLiveChannelIndex > -1)

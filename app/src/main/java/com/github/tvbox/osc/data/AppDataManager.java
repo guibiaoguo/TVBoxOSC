@@ -10,6 +10,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
 
 import com.github.tvbox.osc.base.App;
 import com.github.tvbox.osc.util.FileUtils;
+import com.github.tvbox.osc.util.LOG;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,7 +23,7 @@ import java.io.IOException;
  * @since 2020/5/15
  */
 public class AppDataManager {
-    private static final int DB_FILE_VERSION = 3;
+    private static final int DB_FILE_VERSION = 4;
     private static final String DB_NAME = "tvbox";
     private static volatile AppDataManager manager;
     private static AppDataBase dbInstance;
@@ -75,6 +76,31 @@ public class AppDataManager {
             }
         }
     };
+
+    static final Migration MIGRATION_3_4 = new Migration(3, 4) {
+        @Override
+        public void migrate(SupportSQLiteDatabase database) {
+            try {
+//                database.execSQL("drop table liveCollect");
+//                database.execSQL("ALTER TABLE liveCollect ADD COLUMN channelSourceNames TEXT");
+                database.execSQL("CREATE TABLE IF NOT EXISTS `liveCollect` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `updateTime` INTEGER,  `channelIndex` INTEGER, `channelNum` INTEGER, `channelName` TEXT, `channelUrls` TEXT, `channelSourceNames` TEXT)");
+            } catch (SQLiteException e) {
+                e.printStackTrace();
+            }
+        }
+    };
+    static final Migration MIGRATION_4_5 = new Migration(4, 5) {
+        @Override
+        public void migrate(SupportSQLiteDatabase database) {
+            try {
+//                database.execSQL("drop table liveCollect");
+                database.execSQL("ALTER TABLE liveCollect ADD COLUMN channelSourceNames TEXT");
+//                database.execSQL("CREATE TABLE IF NOT EXISTS `liveCollect` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `updateTime` INTEGER,  `channelIndex` INTEGER, `channelNum` INTEGER, `channelName` TEXT, `channelUrls` TEXT, `channelSourceNames` TEXT)");
+            } catch (SQLiteException e) {
+                e.printStackTrace();
+            }
+        }
+    };
     static String dbPath() {
         return DB_NAME + ".v" + DB_FILE_VERSION + ".db";
     }
@@ -88,17 +114,19 @@ public class AppDataManager {
                     .setJournalMode(RoomDatabase.JournalMode.TRUNCATE)
                     .addMigrations(MIGRATION_1_2)
                     .addMigrations(MIGRATION_2_3)
+                    .addMigrations(MIGRATION_3_4)
+                    .addMigrations(MIGRATION_4_5)
                     .addCallback(new RoomDatabase.Callback() {
                         @Override
                         public void onCreate(@NonNull SupportSQLiteDatabase db) {
                             super.onCreate(db);
-//                        LOG.i("数据库第一次创建成功");
+                        LOG.i("数据库第一次创建成功");
                         }
 
                         @Override
                         public void onOpen(@NonNull SupportSQLiteDatabase db) {
                             super.onOpen(db);
-//                        LOG.i("数据库打开成功");
+                        LOG.i("数据库打开成功");
                         }
                     }).allowMainThreadQueries()//可以在主线程操作
                     .build();

@@ -1,6 +1,8 @@
 package com.github.tvbox.osc.ui.adapter;
 
 import android.graphics.Color;
+import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.chad.library.adapter.base.BaseQuickAdapter;
@@ -28,6 +30,7 @@ public class LiveChannelItemAdapter extends BaseQuickAdapter<LiveChannelItem, Ba
     protected void convert(BaseViewHolder holder, LiveChannelItem item) {
         TextView tvChannelNum = holder.getView(R.id.tvChannelNum);
         TextView tvChannel = holder.getView(R.id.tvChannelName);
+        ImageView imageView = holder.getView(R.id.tvChannelIcon);
         tvChannelNum.setText(String.format("%s", item.getChannelNum()));
         tvChannel.setText(item.getChannelName());
         int channelIndex = item.getChannelIndex();
@@ -41,6 +44,12 @@ public class LiveChannelItemAdapter extends BaseQuickAdapter<LiveChannelItem, Ba
         else{
             tvChannelNum.setTextColor(Color.WHITE);
             tvChannel.setTextColor(Color.WHITE);
+        }
+        if(item.isFavor()) {
+            imageView.setImageResource(R.drawable.icon_collect);
+            imageView.setVisibility(View.VISIBLE);
+        } else {
+            imageView.setVisibility(View.GONE);
         }
     }
 

@@ -23,5 +23,6 @@
         android:singleLine="true"
         android:textColor="@android:color/white"
         android:textSize="24mm"
+        android:text="收藏"
         android:textStyle="bold" />
 </LinearLayout>

@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 3,
-    "identityHash": "a6da0d26156a50aafc04c72a03ea0f93",
+    "identityHash": "5752f50fa489fbf6804086a4d406d798",
     "entities": [
       {
         "tableName": "cache",
@@ -197,12 +197,68 @@
           }
         ],
         "foreignKeys": []
+      },
+      {
+        "tableName": "liveCollect",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `updateTime` INTEGER NOT NULL, `channelIndex` INTEGER NOT NULL, `channelNum` INTEGER NOT NULL, `channelName` TEXT, `channelUrls` TEXT, `channelSourceNames` TEXT)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updateTime",
+            "columnName": "updateTime",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "channelIndex",
+            "columnName": "channelIndex",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "channelNum",
+            "columnName": "channelNum",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "channelName",
+            "columnName": "channelName",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "channelUrls",
+            "columnName": "channelUrls",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "channelSourceNames",
+            "columnName": "channelSourceNames",
+            "affinity": "TEXT",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
       }
     ],
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'a6da0d26156a50aafc04c72a03ea0f93')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '5752f50fa489fbf6804086a4d406d798')"
     ]
   }
 }

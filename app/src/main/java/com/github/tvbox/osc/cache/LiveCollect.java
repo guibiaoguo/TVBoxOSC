@@ -19,6 +19,10 @@ public class LiveCollect implements Serializable {
     public int channelNum;
     @ColumnInfo(name = "channelName")
     public String channelName;
+    @ColumnInfo(name = "channelUrls")
+    public String channelUrls;
+    @ColumnInfo(name = "channelSourceNames")
+    public String channelSourceNames;
 
     public int getId() {
         return id;
@@ -27,4 +31,5 @@ public class LiveCollect implements Serializable {
     public void setId(int id) {
         this.id = id;
     }
+
 }
