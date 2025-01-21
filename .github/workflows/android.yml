@@ -97,13 +97,11 @@ jobs:
       with:
         name: ${env.release_tag}
         tag: ${env.release_tag}
-        allowUpdates: true
-        removeArtifacts: true
         artifacts: |
-          apk/*.apk
+          TVBoxOSC/apk/*.apk
     # 存档打包的文件
     - name: Archive production artifacts
       uses: actions/upload-artifact@v4.6.0
       with:
         name: build
-        path: app/build/outputs #将打包之后的文件全部上传（里面会有混淆的map文件）
+        path: TVBoxOSC/app/build/outputs #将打包之后的文件全部上传（里面会有混淆的map文件）
