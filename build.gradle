@@ -1,249 +1,82 @@
-apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-kapt'
-apply plugin: 'com.yanzhenjie.andserver'
-
-def static buildTime() {
-    return new Date().format("yyyyMMdd_HHmm", TimeZone.getTimeZone("GMT+08:00"))
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+buildscript {
+    ext.kotlin_version = "1.9.25"
+    repositories {
+        gradlePluginPortal()
+        google()
+        mavenCentral()
+        maven { url "https://jitpack.io" }
+        maven { url "https://maven.aliyun.com/repository/releases" }
+        maven { url "https://maven.aliyun.com/repository/public" }
+        maven {
+            url "https://storage.googleapis.com/r8-releases/raw"
+        }
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:7.4.2'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+        classpath("com.android.tools:r8:8.5.35")
+        classpath 'com.yanzhenjie.andserver:plugin:2.1.12'
+    }
 }
 
-// 读取前面配置的keystore.properties
-def keyProps = new Properties()
-def keyPropsFile = rootProject.file('keystore/keystore.properties')
-if (keyPropsFile.exists()) {
-    keyProps.load(new FileInputStream(keyPropsFile))
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+        maven { url "https://jitpack.io" }
+        maven { url "https://maven.aliyun.com/repository/releases" }
+        maven { url "https://maven.aliyun.com/repository/public" }
+        gradlePluginPortal()
+    }
 }
 
-// 读取version.properties
-def versionProps = new Properties()
-def versionPropsFile = rootProject.file('version.properties')
-if (versionPropsFile.exists()) {
-    versionProps.load(new FileInputStream(versionPropsFile))
+task clean(type: Delete) {
+    delete rootProject.buildDir
 }
 
-android {
-    compileSdk 34
-
-    defaultConfig {
-        applicationId 'com.github.tvbox.osc.debug'
-        minSdkVersion 21
-        targetSdkVersion 33
-        versionCode 1
-        versionName "1.0.".concat(buildTime())
-        multiDexEnabled true
-        //设置room的Schema的位置
-        javaCompileOptions {
-            annotationProcessorOptions {
-                arguments = ["room.schemaLocation": "$projectDir/schemas".toString()]
-            }
+task upgradeVersion {
+    group 'help'
+    description '构建新版本'
+    doLast {
+        println("---自动升级版本号---\n")
+        def versionProps = new Properties()
+        def versionPropsFile = rootProject.file('version.properties')
+        if (versionPropsFile.exists()) {
+            versionProps.load(new FileInputStream(versionPropsFile))
         }
+        String oldVersionCode = versionProps['versionCode']
+        String oldVersionName = versionProps['versionName']
+        if (oldVersionCode == null || oldVersionName == null ||
+                oldVersionCode.isEmpty() || oldVersionName.isEmpty()) {
+            println("error:版本号不能为空")
+            return;
+        }
+        versionProps['versionCode'] = String.valueOf(versionProps['versionCode'].toInteger() + 1)
+        String str = versionProps['versionName'].toString()
+        versionProps['versionName'] = str.substring(0, str.lastIndexOf('.') + 1) +
+                (str.substring(str.lastIndexOf('.') + 1).toInteger() + 1)
+        String tip =
+                "版本号从$oldVersionName($oldVersionCode)升级到${versionProps['versionName']}(${versionProps['versionCode']})"
+        println(tip)
 
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        def writer = new FileWriter(versionPropsFile)
+        versionProps.store(writer, null)
+        writer.flush()
+        writer.close()
+        def tag = "v${versionProps['versionName']}"
+        cmdExecute("git pull")
+        cmdExecute("git add version.properties")
+        cmdExecute("git commit -m \"版本号升级为：$tag\"")
+        cmdExecute("git push origin")
+        cmdExecute("git tag $tag")
+        cmdExecute("git push origin $tag")
     }
-    packagingOptions {
-        jniLibs {
-            useLegacyPackaging true
-        }
-        resources {
-            excludes += ['META-INF/DEPENDENCIES']
-        }
-    }
-
-    signingConfigs {
-        release {
-            keyAlias keyProps['keyAlias']
-            keyPassword keyProps['keyPassword']
-            storeFile keyProps['storeFile'] ? file(keyProps['storeFile']) : null
-            storePassword keyProps['storePassword']
-        }
-    }
-
-    buildTypes {
-        debug {
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            minifyEnabled false
-
-            ndk {
-                abiFilters 'armeabi-v7a'
-                abiFilters 'arm64-v8a'
-            }
-        }
-        release {
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            minifyEnabled true
-            ndk {
-                abiFilters 'armeabi-v7a'
-                abiFilters 'arm64-v8a'
-            }
-            signingConfig signingConfigs.release //配置签名文件
-        }
-    }
-    flavorDimensions +=[ "abi","brand" ]
-    productFlavors {
-        armeabi {
-            dimension = "abi"
-            ndk {
-                abiFilters 'armeabi-v7a'
-            }
-        }
-        arm64 {
-            dimension = "abi"
-            ndk {
-                abiFilters 'arm64-v8a'
-            }
-        }
-
-        generic  {
-            //通用版本
-            dimension = "brand"
-        }
-
-        hisense {
-            //海信的
-            applicationId 'com.github.hisense.osc.tk'
-            dimension = "brand"
-        }
-    }
-    applicationVariants.configureEach { variant ->
-        variant.outputs.configureEach { output ->
-            def flavorNames = variant.productFlavors.collect { it.name }.join('-')
-            // 构建自定义文件名
-            def fileName = "TVBox_${variant.buildType.name}-${flavorNames}.apk"
-            outputFileName = fileName
-        }
-    }
-
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
-
-    buildFeatures {
-        dataBinding = true
-    }
-
-    lint {
-        disable 'UnsafeOptInUsageError'
-        abortOnError false
-        checkReleaseBuilds false
-    }
-
-    testOptions {
-        unitTests {
-            includeAndroidResources = true
-            unitTests.returnDefaultValues = true
-        }
-    }
-    namespace 'com.github.tvbox.osc'
-//    splits {
-//        abi {
-//            enable true
-//            reset()
-//
-//            // Specifies a list of ABIs that Gradle should create APKs for.
-//            include "x86", "x86_64", "armeabi-v7a", "arm64-v8a", "armeabi", "mips", "mips64"
-//            universalApk true //generate an additional APK that contains all the ABIs
-//        }
-//    }
-
 }
 
-dependencies {
-    constraints {
-        implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.0") {
-            because("kotlin-stdlib-jdk7 is now a part of kotlin-stdlib")
-        }
-        implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.0") {
-            because("kotlin-stdlib-jdk8 is now a part of kotlin-stdlib")
-        }
-    }
-    api fileTree(dir: "libs", include: ['*.jar', '*.aar'])
-    implementation 'org.conscrypt:conscrypt-android:2.5.2'
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    // for WebDAV
-    implementation('com.github.thegrizzlylabs:sardine-android:0.8') {
-        exclude group: 'com.squareup.okhttp3'
-    }
-    implementation 'com.github.NanoHttpd.nanohttpd:nanohttpd:nanohttpd-project-2.3.1'
-    implementation 'com.github.NanoHttpd.nanohttpd:nanohttpd:nanohttpd-websocket-2.3.1'
-    implementation 'com.google.zxing:core:3.5.1'
-    implementation 'androidx.appcompat:appcompat:1.7.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
-    implementation 'androidx.recyclerview:recyclerview:1.3.2'
-    implementation 'com.google.android.material:material:1.12.0'
-    implementation files('libs/thunder.jar')
-    implementation project(path: ':quickjs')
-
-    kapt 'androidx.room:room-compiler:2.6.1'
-    implementation 'com.github.alidili:FlowLayout:v1.5'
-    implementation 'androidx.room:room-runtime:2.6.1'
-    implementation 'androidx.multidex:multidex:2.0.1'
-    implementation 'com.squareup.okhttp3:okhttp:3.12.11'
-    implementation 'com.squareup.okio:okio:3.3.0'
-    implementation 'com.github.CymChad:BaseRecyclerViewAdapterHelper:2.9.49-androidx'
-    implementation 'com.kingja.loadsir:loadsir:1.3.8'
-    implementation 'com.google.code.gson:gson:2.10.1'
-    implementation 'com.github.bumptech.glide:glide:4.16.0'
-    kapt 'com.github.bumptech.glide:compiler:4.16.0'
-    implementation 'me.jessyan:autosize:1.2.1'
-    implementation('com.thoughtworks.xstream:xstream:1.4.20') {
-        exclude group: 'xmlpull', module: 'xmlpull'
-    }
-    implementation 'org.greenrobot:eventbus:3.3.1'
-    implementation 'com.orhanobut:hawk:2.0.1'
-    implementation 'net.sourceforge.streamsupport:android-retrofuture:1.7.4'
-    implementation 'androidx.annotation:annotation:1.8.2'
-    implementation "androidx.media3:media3-exoplayer:1.3.1"
-    implementation "androidx.media3:media3-ui:1.3.1"
-    implementation "androidx.media3:media3-exoplayer-dash:1.3.1"
-    implementation "androidx.media3:media3-exoplayer-hls:1.3.1"
-    implementation "androidx.media3:media3-exoplayer-rtsp:1.3.1"
-    implementation "androidx.media3:media3-datasource-rtmp:1.3.1"
-    implementation 'androidx.media3:media3-common:1.3.1'
-    implementation "com.github.anilbeesetti.nextlib:nextlib-media3ext:0.7.1"
-
-
-
-    implementation "com.aliyun.sdk.android:AliyunPlayer:5.5.2.0-full"
-    implementation 'com.alivc.conan:AlivcConan:0.9.5'
-    implementation 'xyz.doikki.android.dkplayer:dkplayer-ui:3.3.7'
-    implementation 'xyz.doikki.android.dkplayer:videocache:3.3.7'
-
-    implementation 'com.lzy.net:okgo:3.0.4'
-    implementation 'com.owen:tv-recyclerview:3.0.0'
-    implementation 'com.blankj:utilcodex:1.31.0'
-    implementation 'com.github.getActivity:XXPermissions:18.5'
-    implementation 'org.jsoup:jsoup:1.16.1'
-    implementation 'com.github.hedzr:android-file-chooser:v1.2.0-final'
-    implementation 'commons-io:commons-io:2.13.0'
-    implementation 'com.googlecode.juniversalchardet:juniversalchardet:1.0.3'
-    implementation 'org.apache.commons:commons-text:1.10.0'
-    implementation 'com.github.seven332:jcifs:1.3.19'
-    implementation 'org.conscrypt:conscrypt-android:2.5.2'
-    implementation 'io.github.inflationx:viewpump:2.1.1'
-    implementation 'io.github.inflationx:calligraphy3:3.1.1'
-    implementation 'com.yanzhenjie.andserver:api:2.1.12'
-    kapt 'com.yanzhenjie.andserver:processor:2.1.12'
-    implementation 'com.github.ctiao:DanmakuFlameMaster:0.9.25'
-    implementation 'com.github.ctiao:ndkbitmap-armv7a:0.9.21'
-    implementation('org.simpleframework:simple-xml:2.7.1') {
-        exclude group: 'stax', module: 'stax-api'
-        exclude group: 'xpp3', module: 'xpp3'
-    }
-    implementation 'com.google.protobuf:protobuf-java:4.29.2'
-    implementation 'com.google.protobuf:protobuf-java-util:4.29.2'
-    configurations {
-        configureEach {
-            exclude group: 'xpp3', module: 'xpp3'
-        }
-    }
-    //test框架
-//    implementation 'androidx.appcompat:appcompat:1.6.1'
-//    implementation 'com.google.android.material:material:1.8.0'
-    testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
-    androidTestImplementation 'org.nanohttpd:nanohttpd:2.3.1'
-
+void cmdExecute(String cmd) {
+    println "\n执行$cmd"
+    println cmd.execute().text
 }

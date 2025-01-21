@@ -49,14 +49,14 @@ android {
         }
     }
 
-    signingConfigs {
-        release {
-            keyAlias keyProps['keyAlias']
-            keyPassword keyProps['keyPassword']
-            storeFile keyProps['storeFile'] ? file(keyProps['storeFile']) : null
-            storePassword keyProps['storePassword']
-        }
-    }
+//    signingConfigs {
+//        release {
+//            keyAlias keyProps['keyAlias']
+//            keyPassword keyProps['keyPassword']
+//            storeFile keyProps['storeFile'] ? file(keyProps['storeFile']) : null
+//            storePassword keyProps['storePassword']
+//        }
+//    }
 
     buildTypes {
         debug {
@@ -75,7 +75,7 @@ android {
                 abiFilters 'armeabi-v7a'
                 abiFilters 'arm64-v8a'
             }
-            signingConfig signingConfigs.release //配置签名文件
+//            signingConfig signingConfigs.release //配置签名文件
         }
     }
     flavorDimensions +=[ "abi","brand" ]
