@@ -95,10 +95,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        name: ${{ env.tag }}
-        tag: ${{ env.tag }}
         allowUpdates: true
-        removeArtifacts: true
         artifacts: |
           apk/*.apk
     # 存档打包的文件
