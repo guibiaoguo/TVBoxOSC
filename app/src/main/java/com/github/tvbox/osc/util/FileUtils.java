@@ -373,4 +373,17 @@ public class FileUtils {
         File file2 = new File(path.replace("file:/", Environment.getExternalStorageDirectory().getAbsolutePath()));
         return file2.exists() ? file2 : file1.exists() ? file1 : new File(path);
     }
+
+    public static String writeDanmu(byte[] bytes,String path) {
+        String root = Environment.getExternalStorageDirectory().getAbsolutePath();
+        if (!new File(root+File.separator+"TV").exists()){
+            new File(root+File.separator+"TV").mkdir();
+        }
+        if (!new File(root+File.separator+"TV"+File.separator+"danmu").exists()){
+            new File(root+File.separator+"TV"+File.separator+"danmu").mkdir();
+        }
+        path = root+File.separator+"TV"+File.separator+"danmu"+File.separator+path;
+        writeSimple(bytes,new File(path));
+        return path;
+    }
 }

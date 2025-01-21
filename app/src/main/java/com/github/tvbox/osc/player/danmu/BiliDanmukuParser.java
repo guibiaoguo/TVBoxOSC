@@ -2,15 +2,24 @@ package com.github.tvbox.osc.player.danmu;
 
 import android.graphics.Color;
 import android.text.TextUtils;
+import android.util.Log;
 
-import com.github.tvbox.osc.bean.Danmu;
 import com.github.tvbox.osc.util.ColorHelper;
 import com.github.tvbox.osc.util.FileUtils;
 import com.github.tvbox.osc.util.HawkUtils;
+import com.github.tvbox.osc.util.MD5;
+import com.google.protobuf.util.JsonFormat;
 import com.lzy.okgo.OkGo;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import master.flame.danmaku.danmaku.model.AlphaValue;
 import master.flame.danmaku.danmaku.model.BaseDanmaku;
@@ -23,38 +32,71 @@ import master.flame.danmaku.danmaku.model.android.Danmakus;
 import master.flame.danmaku.danmaku.parser.BaseDanmakuParser;
 import master.flame.danmaku.danmaku.util.DanmakuUtils;
 
-public class Parser extends BaseDanmakuParser {
+public class BiliDanmukuParser extends BaseDanmakuParser {
+    private BaseDanmakuParser.Listener listener;
+    public BiliDanmukuParser(String path) {
+        long start = new Date().getTime();
+        Log.d("start",start+"");
+        this.billDanmuList = new ArrayList<>();
+        String[] paths = path.split("\\?");
+        Map<String,String> params = new HashMap<>();
+        for (String p:paths[1].split("&")){
+            params.put(p.split("=")[0],p.split("=")[1]);
+        }
+        String content = getContent(path);
+        double i = 1;
+        setListener(listener);
+        while (!content.equals("{\n}")) {
+            BillDanmu bill = BillDanmu.objectFrom(content);
+            billDanmuList.addAll(bill.getDanmus());
+            StringBuilder builder = new StringBuilder();
+            if (i<2){
+                i=i+0.5;
+                builder.append("oid=").append(params.get("oid")).append("&pe=").append(i==1?120000:360000).append("&pid=").append(params.get("pid"));
+                builder.append("&ps=").append(i==1?0:120000).append("&pull_mode=1&segment_index=1");
+                builder.append("&type=1&web_location=1315873");
+            } else {
+                i=Math.floor(i+1);
+                builder.append("oid=").append(params.get("oid")).append("&pid=").append(params.get("pid"));
+                builder.append("&segment_index=").append((int)i);
+                builder.append("&type=1&web_location=1315873");
+            }
+            builder.append("&wts="+(System.currentTimeMillis()/1000));
+            String md5 = MD5.encode(builder + "ea1db124af3c7062474693fa704f4ff8");
+            String url = paths[0] + "?" + builder + "&w_rid=" + md5;
+            content = getContent(url);
+        }
+        long end = new Date().getTime();
+        Log.d("end",end+" 耗时 "+(end-start)/1000.0);
+    }
 
-    private final Danmu danmu;
+    private final List<BillDanmu> billDanmuList;
     private BaseDanmaku item;
     private float scaleX;
     private float scaleY;
     private int index;
 
-    public Parser(String path) {
-        this.danmu = Danmu.fromXml(getContent(path));
-    }
-
     private String getContent(String path) {
-        path = DanmuRoute.route(path);
         if (path.startsWith("file")) return FileUtils.read(path);
         if (path.startsWith("http")) {
             try {
-                return OkGo.<String>get(path).execute().body().string();
-            } catch (Throwable ignored) {
+                InputStream inputStream =  OkGo.<String>get(path).execute().body().byteStream();
+                BillDanmuEntity.Danmus bill = BillDanmuEntity.Danmus.parseFrom(inputStream);
+                String json = JsonFormat.printer().print(bill);
+                return json;
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
-        return path;
+        return "{\n}";
     }
 
     @Override
     protected Danmakus parse() {
         Danmakus result = new Danmakus(IDanmakus.ST_BY_TIME);
-        for (Danmu.Data data : danmu.getData()) {
-            String[] values = data.getParam().split(",");
-            if (values.length < 4) continue;
-            setParam(values);
-            setText(data.getText());
+        for (BillDanmu billDanmu1:billDanmuList) {
+            setParam(billDanmu1);
+            setText(billDanmu1.getContent());
             synchronized (result.obtainSynchronizer()) {
                 result.addItem(item);
             }
@@ -70,11 +112,11 @@ public class Parser extends BaseDanmakuParser {
         return this;
     }
 
-    private void setParam(String[] values) {
-        int type = Integer.parseInt(values[1]);
-        long time = (long) (Float.parseFloat(values[0]) * 1000);
-        float size = Float.parseFloat(values[2]) * (mDispDensity - 0.6f);
-        int color = HawkUtils.getDanmuColor()? ColorHelper.getCN():(int) ((0x00000000ff000000L | Long.parseLong(values[3])) & 0x00000000ffffffffL);
+    private void setParam(BillDanmu billDanmu) {
+        int type = billDanmu.getMode();
+        long time = billDanmu.getProgress();
+        float size = billDanmu.getFontsize() * (mDispDensity - 0.6f);
+        int color = HawkUtils.getDanmuColor()? ColorHelper.getCN():(int) ((0x00000000ff000000L | billDanmu.getColor()) & 0x00000000ffffffffL);
         item = mContext.mDanmakuFactory.createDanmaku(type, mContext);
         item.setTime(time);
         item.setTimer(mTimer);
@@ -86,18 +128,6 @@ public class Parser extends BaseDanmakuParser {
 
     private void setText(String text) {
         item.index = index++;
-        if (item.getType() == BaseDanmaku.TYPE_SPECIAL && text.startsWith("[") && text.endsWith(",")) {
-            text = text.substring(0,text.length()-1)+"]";
-        }
-        if (item.getType() == BaseDanmaku.TYPE_SPECIAL && text.startsWith("[") && !text.endsWith("]")) {
-            text = text+"\"]";
-        }
-        if (item.getType() == BaseDanmaku.TYPE_SPECIAL && !text.startsWith("[") && text.endsWith("]")) {
-            text = "["+text;
-        }
-        if (item.getType() == BaseDanmaku.TYPE_SPECIAL && !text.startsWith("[") && !text.endsWith("]")) {
-            text = "["+text+"]";
-        }
         DanmakuUtils.fillText(item, decodeXmlString(text));
         if (item.getType() == BaseDanmaku.TYPE_SPECIAL && text.startsWith("[") && text.endsWith("]")) setSpecial();
     }
@@ -108,7 +138,7 @@ public class Parser extends BaseDanmakuParser {
             JSONArray jsonArray = new JSONArray(item.text.toString());
             textArr = new String[jsonArray.length()];
             for (int i = 0; i < textArr.length; i++) {
-                textArr[i] = jsonArray.optString(i);
+                textArr[i] = jsonArray.getString(i);
             }
         } catch (JSONException e) {
             e.printStackTrace();
@@ -132,7 +162,7 @@ public class Parser extends BaseDanmakuParser {
         long translationDuration = alphaDuraion;
         long translationStartDelay = 0;
         float rotateY = 0, rotateZ = 0;
-        if (textArr.length >= 7 && !TextUtils.isEmpty(textArr[6])) {
+        if (textArr.length >= 7) {
             rotateZ = Float.parseFloat(textArr[5]);
             rotateY = Float.parseFloat(textArr[6]);
         }
@@ -203,4 +233,5 @@ public class Parser extends BaseDanmakuParser {
         if (title.contains("&lt;")) title = title.replace("&lt;", "<");
         return title;
     }
+
 }

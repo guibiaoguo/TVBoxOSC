@@ -2,6 +2,7 @@ package com.github.tvbox.osc.player;
 
 import android.content.Context;
 import android.util.AttributeSet;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -96,12 +97,12 @@ public class MyVideoView extends VideoView implements DrawHandler.Callback {
 
     @Override
     public void updateTimer(DanmakuTimer timer) {
-
+//        Log.d("DFM",timer.currMillisecond+"");
     }
 
     @Override
     public void danmakuShown(BaseDanmaku danmaku) {
-
+        Log.d("DFM", "danmakuShown(): text=" + danmaku.text);
     }
 
     @Override

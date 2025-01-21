@@ -1,0 +1,105 @@
+name: Android CI
+
+# 触发器
+on:
+  push:
+    tags:
+      - v*
+  pull_request:
+    tags:
+      - v*
+#on:
+  repository_dispatch:
+  workflow_dispatch:
+    inputs:
+      ssh:
+        description: 'SSH connection to Actions'
+        required: false
+        default: 'false'
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    # 设置jdk环境为 17
+    steps:
+    - uses: actions/checkout@v2
+    - name: set up JDK 17
+      uses: actions/setup-java@v1
+      with:
+        java-version: 17
+        distribution: 'temurin'
+    # 获取打包秘钥
+    - name: Checkout Android Keystore
+      uses: actions/checkout@v2
+      with:
+        repository: guibiaoguo/keystore
+        token: ${{ secrets.TOKEN }} # 连接仓库的token,需要单独配置
+        path: keystore # 仓库的根目录名
+    # 打包release
+    - name: Build with Gradle
+      run: |
+        chmod +x gradlew
+        ./gradlew assembleRelease --build-cache --parallel --daemon --warning-mode all
+         rm -rf apk/
+         mkdir -p apk/
+         for file in `find ~ -name "*release*.apk" -print`; do
+           base=$(basename "$file")
+           echo "${base}"
+           mv "$file" "apk/$base"
+         done
+         APP_BUILD_APK=${base}
+         #APP_MODULE=IMEService
+         #APP_BUILD_APK=$(find ${APP_MODULE}/build -regex .*/.*/release/.*.apk)
+         APP_BUILD_APK=${APP_BUILD_APK:2}
+         echo ${APP_BUILD_APK}
+         echo "APP_MODULE=${APP_BUILD_APK%%/*}" >> $GITHUB_ENV
+         echo "APP_RELEASE_NAME=${GITHUB_WORKSPACE##*/}" >> $GITHUB_ENV
+         echo "APP_BUILD_APK=${APP_BUILD_APK}/apk/*" >> $GITHUB_ENV
+    - name: Generate release tag
+      id: tag
+      run: |
+        echo "release_tag=$(date +"%Y.%m.%d-%H%M")" >> $GITHUB_OUTPUT
+      # 创建release
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        #GitHub 会自动创建 GITHUB_TOKEN 密码以在工作流程中使用。 
+        #您可以使用 GITHUB_TOKEN 在工作流程运行中进行身份验证。
+        #当您启用 GitHub Actions 时，GitHub 在您的仓库中安装 GitHub 应用程序。 
+        #GITHUB_TOKEN 密码是一种 GitHub 应用程序 安装访问令牌。 
+        #您可以使用安装访问令牌代表仓库中安装的 GitHub 应用程序 进行身份验证。 
+        #令牌的权限仅限于包含您的工作流程的仓库。 更多信息请参阅“GITHUB_TOKEN 的权限”。
+        #在每个作业开始之前， GitHub 将为作业提取安装访问令牌。 令牌在作业完成后过期。
+      with:
+        tag_name: ${{ steps.tag.outputs.release_tag }}
+        release_name: ${{ steps.tag.outputs.release_tag }}
+        draft: false
+        prerelease: false
+    # 获取apk版本号
+    - name: Get Version Name
+      uses: actions/github-script@v3
+      id: get-version
+      with:
+        script: |
+          const str=process.env.GITHUB_REF;
+          return str.substring(str.indexOf("v"));
+        result-encoding: string
+    # 上传至release的资源
+    - name: Upload Release Asset
+      id: upload-release-asset 
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }} # 上传网址，无需改动
+        asset_path: ${{ env.APP_BUILD_APK }} # 上传路径
+        asset_name: ${{ env.APP_RELEASE_NAME }}-${{steps.get-version.outputs.result}}.apk # 资源名
+        asset_content_type: application/vnd.android.package-archiv #资源类型
+    # 存档打包的文件
+    - name: Archive production artifacts
+      uses: actions/upload-artifact@v4.6.0
+      with:
+        name: build
+        path: ${{ env.APP_MODULE }}/build/outputs #将打包之后的文件全部上传（里面会有混淆的map文件）

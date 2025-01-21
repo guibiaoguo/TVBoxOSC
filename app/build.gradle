@@ -7,13 +7,27 @@ def static buildTime() {
     return new Date().format("yyyyMMdd_HHmm", TimeZone.getTimeZone("GMT+08:00"))
 }
 
+// 读取前面配置的keystore.properties
+def keyProps = new Properties()
+def keyPropsFile = rootProject.file('keystore/keystore.properties')
+if (keyPropsFile.exists()) {
+    keyProps.load(new FileInputStream(keyPropsFile))
+}
+
+// 读取version.properties
+def versionProps = new Properties()
+def versionPropsFile = rootProject.file('version.properties')
+if (versionPropsFile.exists()) {
+    versionProps.load(new FileInputStream(versionPropsFile))
+}
+
 android {
     compileSdk 34
 
     defaultConfig {
         applicationId 'com.github.tvbox.osc.debug'
         minSdkVersion 21
-        targetSdkVersion 28
+        targetSdkVersion 33
         versionCode 1
         versionName "1.0.".concat(buildTime())
         multiDexEnabled true
@@ -26,9 +40,22 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
-
     packagingOptions {
-        exclude 'META-INF/DEPENDENCIES'
+        jniLibs {
+            useLegacyPackaging true
+        }
+        resources {
+            excludes += ['META-INF/DEPENDENCIES']
+        }
+    }
+
+    signingConfigs {
+        release {
+            keyAlias keyProps['keyAlias']
+            keyPassword keyProps['keyPassword']
+            storeFile keyProps['storeFile'] ? file(keyProps['storeFile']) : null
+            storePassword keyProps['storePassword']
+        }
     }
 
     buildTypes {
@@ -48,6 +75,7 @@ android {
                 abiFilters 'armeabi-v7a'
                 abiFilters 'arm64-v8a'
             }
+            signingConfig signingConfigs.release //配置签名文件
         }
     }
     flavorDimensions +=[ "abi","brand" ]
@@ -86,13 +114,8 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
-    }
-
-    lintOptions {
-        checkReleaseBuilds false
-        abortOnError false
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 
     buildFeatures {
@@ -101,6 +124,8 @@ android {
 
     lint {
         disable 'UnsafeOptInUsageError'
+        abortOnError false
+        checkReleaseBuilds false
     }
 
     testOptions {
@@ -201,10 +226,13 @@ dependencies {
     implementation 'com.yanzhenjie.andserver:api:2.1.12'
     kapt 'com.yanzhenjie.andserver:processor:2.1.12'
     implementation 'com.github.ctiao:DanmakuFlameMaster:0.9.25'
+    implementation 'com.github.ctiao:ndkbitmap-armv7a:0.9.21'
     implementation('org.simpleframework:simple-xml:2.7.1') {
         exclude group: 'stax', module: 'stax-api'
         exclude group: 'xpp3', module: 'xpp3'
     }
+    implementation 'com.google.protobuf:protobuf-java:4.29.2'
+    implementation 'com.google.protobuf:protobuf-java-util:4.29.2'
     configurations {
         configureEach {
             exclude group: 'xpp3', module: 'xpp3'

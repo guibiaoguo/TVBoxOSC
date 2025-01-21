@@ -82,6 +82,7 @@ import com.github.tvbox.osc.util.LOG;
 import com.github.tvbox.osc.util.M3U8;
 import com.github.tvbox.osc.util.MD5;
 import com.github.tvbox.osc.util.PlayerHelper;
+import com.github.tvbox.osc.util.StringUtil;
 import com.github.tvbox.osc.util.StringUtils;
 import com.github.tvbox.osc.util.SubtitleHelper;
 import com.github.tvbox.osc.util.VideoParseRuler;
@@ -89,7 +90,6 @@ import com.github.tvbox.osc.util.XWalkUtils;
 import com.github.tvbox.osc.util.thunder.Jianpian;
 import com.github.tvbox.osc.util.thunder.Thunder;
 import com.github.tvbox.osc.viewmodel.SourceViewModel;
-import com.google.gson.JsonArray;
 import com.lzy.okgo.OkGo;
 import com.lzy.okgo.callback.AbsCallback;
 import com.lzy.okgo.model.HttpHeaders;
@@ -130,6 +130,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import master.flame.danmaku.danmaku.model.BaseDanmaku;
 import master.flame.danmaku.danmaku.model.IDisplayer;
 import master.flame.danmaku.danmaku.model.android.DanmakuContext;
+import master.flame.danmaku.danmaku.parser.BaseDanmakuParser;
 import master.flame.danmaku.ui.widget.DanmakuView;
 import me.jessyan.autosize.AutoSize;
 import tv.danmaku.ijk.media.player.IMediaPlayer;
@@ -204,7 +205,9 @@ public class PlayFragment extends BaseLazyFragment {
             executorService = Executors.newSingleThreadExecutor();
             executorService.execute(() -> {
                 mDanmuView.release();
-                mDanmuView.prepare(new Parser(danmuText), mDanmakuContext);
+                BaseDanmakuParser parser;
+                parser = new Parser(danmuText);
+                mDanmuView.prepare(parser, mDanmakuContext);
                 App.post(()->{
                     if(mVideoView!=null && mVideoView.isPlaying()){
                         mDanmuView.seekTo(mVideoView.getCurrentPosition());
@@ -1030,6 +1033,17 @@ public class PlayFragment extends BaseLazyFragment {
                     String flag = info.optString("flag");
                     String url = info.getString("url");
                     String danmaku = info.optString("danmaku");
+//                    danmaku = "https://dm.video.qq.com/barrage/segment/x0036x5qqsr/t/v1/0000/30000";
+//                    danmaku = "https://cmts.iqiyi.com/bullet/64/00/1078946400_300_1.z";
+//                    danmaku = "https://bullet-ali.hitv.com/bullet/tx/2025/01/12/234746/21920728/1.json";
+//                    danmaku = "https://bullet-ali.hitv.com/bullet/tx/2025/01/12/234746/21920728/1.json";
+//                    danmaku = "https://api.bilibili.com/x/v2/dm/wbi/web/seg.so?oid=27730904912&pe=120000&pid=113740078909891&ps=0&pull_mode=1&segment_index=1&type=1&web_location=1315873&wts=1736342123&w_rid=0c813e85b64e8127ba875cc7166c9120";
+//                    danmaku = "https://raw.ixnic.net/bilibili/DanmakuFlameMaster/master/Sample/src/main/res/raw/comments.xml";
+//                    danmaku = "http://127.0.0.1:9978/file/tv/danmaku/bill.xml";
+//                    danmaku = "https://v.youku.com/v_show/id_XNjQ0NzkxMDAxNg==.html";
+                    if (TextUtils.isEmpty(danmaku) && org.apache.commons.lang3.StringUtils.containsAnyIgnoreCase(url,"bilibili.com","iqiyi.com","mgtv.com","qq.com","youku.com")) {
+                        danmaku = url;
+                    }
                     HashMap<String, String> headers = null;
                     webUserAgent = null;
                     webHeaderMap = null;

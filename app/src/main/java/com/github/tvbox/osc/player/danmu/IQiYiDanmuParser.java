@@ -2,15 +2,24 @@ package com.github.tvbox.osc.player.danmu;
 
 import android.graphics.Color;
 import android.text.TextUtils;
+import android.util.Log;
 
-import com.github.tvbox.osc.bean.Danmu;
 import com.github.tvbox.osc.util.ColorHelper;
 import com.github.tvbox.osc.util.FileUtils;
 import com.github.tvbox.osc.util.HawkUtils;
+import com.github.tvbox.osc.util.MD5;
+import com.github.tvbox.osc.util.ZLibUtils;
+import com.google.protobuf.util.JsonFormat;
 import com.lzy.okgo.OkGo;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import master.flame.danmaku.danmaku.model.AlphaValue;
 import master.flame.danmaku.danmaku.model.BaseDanmaku;
@@ -23,40 +32,55 @@ import master.flame.danmaku.danmaku.model.android.Danmakus;
 import master.flame.danmaku.danmaku.parser.BaseDanmakuParser;
 import master.flame.danmaku.danmaku.util.DanmakuUtils;
 
-public class Parser extends BaseDanmakuParser {
+public class IQiYiDanmuParser extends BaseDanmakuParser {
+    private BaseDanmakuParser.Listener listener;
+    public IQiYiDanmuParser(String path) {
+        this.iQiYiDanmuList = new ArrayList<>();
+        String content = getContent(path);
+        int i = 1;
+        setListener(listener);
+        while (!TextUtils.isEmpty(content)) {
+            i++;
+            IQiYiDanmu iQiYiDanmu = IQiYiDanmu.fromXml(content);
+            iQiYiDanmuList.addAll(iQiYiDanmu.getData());
+            StringBuilder builder = new StringBuilder();
+            builder.append(path.replace("_1.z","")).append("_").append(i).append(".z");
+            String url = builder.toString();
+            content = getContent(url);
+        }
+    }
 
-    private final Danmu danmu;
+    private final List<IQiYiDanmu.Entry> iQiYiDanmuList;
     private BaseDanmaku item;
     private float scaleX;
     private float scaleY;
     private int index;
 
-    public Parser(String path) {
-        this.danmu = Danmu.fromXml(getContent(path));
-    }
-
     private String getContent(String path) {
-        path = DanmuRoute.route(path);
         if (path.startsWith("file")) return FileUtils.read(path);
         if (path.startsWith("http")) {
             try {
-                return OkGo.<String>get(path).execute().body().string();
-            } catch (Throwable ignored) {
+                InputStream inputStream =  OkGo.<String>get(path).execute().body().byteStream();
+                byte[] bytes = ZLibUtils.decompress(inputStream);
+                String json = new String(bytes,"utf-8");
+                return json;
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
-        return path;
+        return "";
     }
 
     @Override
     protected Danmakus parse() {
         Danmakus result = new Danmakus(IDanmakus.ST_BY_TIME);
-        for (Danmu.Data data : danmu.getData()) {
-            String[] values = data.getParam().split(",");
-            if (values.length < 4) continue;
-            setParam(values);
-            setText(data.getText());
-            synchronized (result.obtainSynchronizer()) {
-                result.addItem(item);
+        for (IQiYiDanmu.Entry entry: iQiYiDanmuList) {
+            for (IQiYiDanmu.BulletInfo bulletInfo:entry.getList()) {
+                setParam(bulletInfo);
+                setText(bulletInfo.getContent());
+                synchronized (result.obtainSynchronizer()) {
+                    result.addItem(item);
+                }
             }
         }
         return result;
@@ -70,11 +94,11 @@ public class Parser extends BaseDanmakuParser {
         return this;
     }
 
-    private void setParam(String[] values) {
-        int type = Integer.parseInt(values[1]);
-        long time = (long) (Float.parseFloat(values[0]) * 1000);
-        float size = Float.parseFloat(values[2]) * (mDispDensity - 0.6f);
-        int color = HawkUtils.getDanmuColor()? ColorHelper.getCN():(int) ((0x00000000ff000000L | Long.parseLong(values[3])) & 0x00000000ffffffffL);
+    private void setParam(IQiYiDanmu.BulletInfo bulletInfo) {
+        int type = 1;
+        long time = bulletInfo.getShowTime()*1000;
+        float size = bulletInfo.getFont() * (mDispDensity - 0.6f);
+        int color = ColorHelper.getCN();
         item = mContext.mDanmakuFactory.createDanmaku(type, mContext);
         item.setTime(time);
         item.setTimer(mTimer);
@@ -86,18 +110,6 @@ public class Parser extends BaseDanmakuParser {
 
     private void setText(String text) {
         item.index = index++;
-        if (item.getType() == BaseDanmaku.TYPE_SPECIAL && text.startsWith("[") && text.endsWith(",")) {
-            text = text.substring(0,text.length()-1)+"]";
-        }
-        if (item.getType() == BaseDanmaku.TYPE_SPECIAL && text.startsWith("[") && !text.endsWith("]")) {
-            text = text+"\"]";
-        }
-        if (item.getType() == BaseDanmaku.TYPE_SPECIAL && !text.startsWith("[") && text.endsWith("]")) {
-            text = "["+text;
-        }
-        if (item.getType() == BaseDanmaku.TYPE_SPECIAL && !text.startsWith("[") && !text.endsWith("]")) {
-            text = "["+text+"]";
-        }
         DanmakuUtils.fillText(item, decodeXmlString(text));
         if (item.getType() == BaseDanmaku.TYPE_SPECIAL && text.startsWith("[") && text.endsWith("]")) setSpecial();
     }
@@ -108,7 +120,7 @@ public class Parser extends BaseDanmakuParser {
             JSONArray jsonArray = new JSONArray(item.text.toString());
             textArr = new String[jsonArray.length()];
             for (int i = 0; i < textArr.length; i++) {
-                textArr[i] = jsonArray.optString(i);
+                textArr[i] = jsonArray.getString(i);
             }
         } catch (JSONException e) {
             e.printStackTrace();
@@ -132,7 +144,7 @@ public class Parser extends BaseDanmakuParser {
         long translationDuration = alphaDuraion;
         long translationStartDelay = 0;
         float rotateY = 0, rotateZ = 0;
-        if (textArr.length >= 7 && !TextUtils.isEmpty(textArr[6])) {
+        if (textArr.length >= 7) {
             rotateZ = Float.parseFloat(textArr[5]);
             rotateY = Float.parseFloat(textArr[6]);
         }
@@ -203,4 +215,5 @@ public class Parser extends BaseDanmakuParser {
         if (title.contains("&lt;")) title = title.replace("&lt;", "<");
         return title;
     }
+
 }
