@@ -97,6 +97,8 @@ jobs:
       with:
         name: ${env.release_tag}
         tag: ${env.release_tag}
+        allowUpdates: true
+        removeArtifacts: true
         artifacts: |
           TVBoxOSC/apk/*.apk
     # 存档打包的文件
