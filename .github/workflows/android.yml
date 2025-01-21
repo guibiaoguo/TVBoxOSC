@@ -42,12 +42,13 @@ jobs:
         ./gradlew assembleRelease --build-cache --parallel --daemon --warning-mode all
          rm -rf apk/
          mkdir -p apk/
+         ls -al
          for file in `find ~ -name "*release*.apk" -print`; do
            base=$(basename "$file")
-           echo "${base}"
+           echo "${file}"
            mv "$file" "apk/$base"
          done
-         APP_BUILD_APK=${base}
+         APP_BUILD_APK=TVBoxOSC/apk/*.apk
          #APP_MODULE=IMEService
          #APP_BUILD_APK=$(find ${APP_MODULE}/build -regex .*/.*/release/.*.apk)
          APP_BUILD_APK=${APP_BUILD_APK:2}
