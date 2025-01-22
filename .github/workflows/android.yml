@@ -36,9 +36,6 @@ jobs:
         token: ${{ secrets.TOKEN }} # 连接仓库的token,需要单独配置
         path: keystore # 仓库的根目录名
     # 打包release
-    - name: App version
-      id: app_version
-      run: echo "VERSION=${GITHUB_REF/refs\/tags\//}" > $GITHUB_OUTPUT
     - name: Build with Gradle
       run: |
         chmod +x gradlew
@@ -53,7 +50,6 @@ jobs:
            APP_BUILD_APK=${file}
          done
          ls -al apk
-         echo {{steps.app_version.outputs.VERSION}}
          #APP_MODULE=IMEService
          #APP_BUILD_APK=$(find ${APP_MODULE}/build -regex .*/.*/release/.*.apk)
          APP_BUILD_APK=${APP_BUILD_APK/arm*}
