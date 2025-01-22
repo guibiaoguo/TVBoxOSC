@@ -55,9 +55,9 @@ jobs:
          APP_BUILD_APK=${APP_BUILD_APK/arm*}
          APP_BUILD_APK="$APP_BUILD_APK/*/release/*.apk"
          echo ${APP_BUILD_APK}
-         echo "APP_MODULE=${APP_BUILD_APK/output*}" >> $GITHUB_ENV
+         echo "APP_MODULE=${APP_BUILD_APK/apk*}" >> $GITHUB_ENV
          echo "APP_RELEASE_NAME=${GITHUB_WORKSPACE##*/}" >> $GITHUB_ENV
-         echo "APP_BUILD_APK=${APP_BUILD_APk}" >> $GITHUB_ENV
+         echo "APP_BUILD_APK=${APP_BUILD_APK}" >> $GITHUB_ENV
     - name: Generate release tag
       id: tag
       run: |
@@ -90,21 +90,19 @@ jobs:
           return str.substring(str.indexOf("v"));
         result-encoding: string
     # 上传至release的资源
-    - name: Release and Upload Assets
-      id: upload-release-asset 
-      uses: ncipollo/release-action@v1
+    - name: Upload Release Asset
+      id: upload-release-asset
+      uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        name: ${env.release_tag}
-        tag: ${env.release_tag}
-        allowUpdates: true
-        removeArtifacts: true
-        artifacts: |
-          ${env.APP_BUILD_APK}
+        upload_url: ${{ steps.create_release.outputs.upload_url }} # 上传网址，无需改动
+        asset_path: ${{ env.APP_BUILD_APK }} # 上传路径
+        asset_name: ${{ env.APP_RELEASE_NAME }}-${{steps.get-version.outputs.result}}.apk # 资源名
+        asset_content_type: application/vnd.android.package-archiv #资源类型
     # 存档打包的文件
     - name: Archive production artifacts
       uses: actions/upload-artifact@v4.6.0
       with:
         name: build
-        path: ${env.APP_MODULE}/* #将打包之后的文件全部上传（里面会有混淆的map文件）
+        path: ${{env.APP_MODULE}}/* #将打包之后的文件全部上传（里面会有混淆的map文件）
