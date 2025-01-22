@@ -57,7 +57,7 @@ jobs:
          echo ${APP_BUILD_APK}
          echo "APP_MODULE=${APP_BUILD_APK/output*}" >> $GITHUB_ENV
          echo "APP_RELEASE_NAME=${GITHUB_WORKSPACE##*/}" >> $GITHUB_ENV
-         echo "APP_BUILD_APK=$APP_BUILD_APk" >> $GITHUB_ENV
+         echo "APP_BUILD_APK=${APP_BUILD_APk}" >> $GITHUB_ENV
     - name: Generate release tag
       id: tag
       run: |
@@ -100,10 +100,11 @@ jobs:
         tag: ${env.release_tag}
         allowUpdates: true
         removeArtifacts: true
-        artifacts: apk/*.apk
+        artifacts: |
+          ${env.APP_BUILD_APK}
     # 存档打包的文件
     - name: Archive production artifacts
       uses: actions/upload-artifact@v4.6.0
       with:
         name: build
-        path: ${APP_MODULE}/* #将打包之后的文件全部上传（里面会有混淆的map文件）
+        path: ${env.APP_MODULE}/* #将打包之后的文件全部上传（里面会有混淆的map文件）
