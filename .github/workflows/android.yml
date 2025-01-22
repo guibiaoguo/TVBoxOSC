@@ -42,14 +42,16 @@ jobs:
     - name: Build with Gradle
       run: |
         chmod +x gradlew
-        #./gradlew assembleRelease --build-cache --parallel --daemon --warning-mode all
+        ./gradlew assembleRelease --build-cache --parallel --daemon --warning-mode all
          rm -rf apk/
          mkdir -p apk/
          ls -al
          for file in `find ~ -name "*release*.apk" -print`; do
            base=$(basename "$file")
+           base=${base/.apk}
+           echo "${base}"
            echo "${file}"
-           mv "$file" "apk/$base"
+           mv "$file" "apk/$base_${{ steps.get_version.outputs.VERSION }}.apk"
            APP_BUILD_APK=${file}
          done
          ls -al apk
@@ -80,8 +82,8 @@ jobs:
         #令牌的权限仅限于包含您的工作流程的仓库。 更多信息请参阅“GITHUB_TOKEN 的权限”。
         #在每个作业开始之前， GitHub 将为作业提取安装访问令牌。 令牌在作业完成后过期。
       with:
-        tag_name: ${{ steps.get_version.outputs.VERSION  }}
-        release_name: ${{ steps.get_version.outputs.VERSION  }}
+        tag_name: ${{ steps.tag.outputs.release_tag  }}
+        release_name: ${{ steps.tag.outputs.release_tag  }}
         draft: false
         prerelease: false
     # 上传至release的资源
@@ -90,8 +92,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ steps.get_version.outputs.VERSION }}
-        name: ${{ env.APP_RELEASE_NAME }}-${{steps.get_version.outputs.VERSION }}
+        tag_name: ${{ steps.tag.outputs.release_tag }}
+        name: ${{ env.APP_RELEASE_NAME }}-${{steps.tag.outputs.release_tag }}
         #files: apk/*
         files: app/libs/*
     # 存档打包的文件
