@@ -95,6 +95,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
+        tag_name: ${{ steps.tag.outputs.release_tag }}
         name: ${{ env.APP_RELEASE_NAME }}-${{steps.tag.outputs.release_tag}}
         files: TVBoxOSC/app/libs/*
     # 存档打包的文件
