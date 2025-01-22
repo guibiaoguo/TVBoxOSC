@@ -36,6 +36,9 @@ jobs:
         token: ${{ secrets.TOKEN }} # 连接仓库的token,需要单独配置
         path: keystore # 仓库的根目录名
     # 打包release
+    - name: Get version
+      id: get_version
+      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
     - name: Build with Gradle
       run: |
         chmod +x gradlew
@@ -76,27 +79,18 @@ jobs:
         #令牌的权限仅限于包含您的工作流程的仓库。 更多信息请参阅“GITHUB_TOKEN 的权限”。
         #在每个作业开始之前， GitHub 将为作业提取安装访问令牌。 令牌在作业完成后过期。
       with:
-        tag_name: ${{ steps.tag.outputs.release_tag }}
-        release_name: ${{ steps.tag.outputs.release_tag }}
+        tag_name: ${{ steps.get_version.outputs.VERSION  }}
+        release_name: ${{ steps.get_version.outputs.VERSION  }}
         draft: false
         prerelease: false
-    # 获取apk版本号
-    - name: Get Version Name
-      uses: actions/github-script@v3
-      id: get-version
-      with:
-        script: |
-          const str=process.env.GITHUB_REF;
-          return str.substring(str.indexOf("v"));
-        result-encoding: string
     # 上传至release的资源
     - name: Upload App To Artifact
       uses: softprops/action-gh-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ steps.tag.outputs.release_tag }}
-        name: ${{ env.APP_RELEASE_NAME }}-${{steps.tag.outputs.release_tag}}
+        tag_name: ${{ steps.get_version.outputs.VERSION }}
+        name: ${{ env.APP_RELEASE_NAME }}-${{steps.get_version.outputs.VERSION }}
         files: apk/*
     # 存档打包的文件
     - name: Archive production artifacts
