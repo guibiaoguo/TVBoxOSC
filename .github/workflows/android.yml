@@ -49,14 +49,14 @@ jobs:
            mv "$file" "apk/$base"
            APP_BUILD_APK=${file}
          done
-         
+         ls -al apk
          #APP_MODULE=IMEService
          #APP_BUILD_APK=$(find ${APP_MODULE}/build -regex .*/.*/release/.*.apk)
-         #APP_BUILD_APK=${APP_BUILD_APK:2}
+         APP_BUILD_APK=${APP_BUILD_APK/arm*}
          echo ${APP_BUILD_APK}
-         echo "APP_MODULE=${APP_BUILD_APK%%/*}" >> $GITHUB_ENV
+         echo "APP_MODULE=${APP_BUILD_APK/output*}" >> $GITHUB_ENV
          echo "APP_RELEASE_NAME=${GITHUB_WORKSPACE##*/}" >> $GITHUB_ENV
-         echo "APP_BUILD_APK=${APP_BUILD_APK/apk/*}" >> $GITHUB_ENV
+         echo "APP_BUILD_APK=${APP_BUILD_APk}/*/release/*.apk" >> $GITHUB_ENV
     - name: Generate release tag
       id: tag
       run: |
@@ -100,10 +100,10 @@ jobs:
         allowUpdates: true
         removeArtifacts: true
         artifacts: |
-          TVBoxOSC/apk/*.apk
+          ${APP_BUILD_APK}
     # 存档打包的文件
     - name: Archive production artifacts
       uses: actions/upload-artifact@v4.6.0
       with:
         name: build
-        path: TVBoxOSC/app/build/outputs #将打包之后的文件全部上传（里面会有混淆的map文件）
+        path: ${APP_MODULE} #将打包之后的文件全部上传（里面会有混淆的map文件）
