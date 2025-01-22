@@ -91,11 +91,12 @@ jobs:
         result-encoding: string
     # 上传至release的资源
     - name: Upload App To Artifact
-      uses: actions/upload-artifact@v4
+      uses: softprops/action-gh-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        name: ${{ env.APP_RELEASE_NAME }}-${{steps.get-version.outputs.result}}
-        path: |
-          ${{env.APP_BUILD_APK}}
+        name: ${{ env.APP_RELEASE_NAME }}-${{env.release_tag}}
+        files: ${{env.APP_BUILD_APK}}
     # 存档打包的文件
     - name: Archive production artifacts
       uses: actions/upload-artifact@v4.6.0
