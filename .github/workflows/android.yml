@@ -38,11 +38,11 @@ jobs:
     # 打包release
     - name: Get version
       id: get_version
-      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+      run: echo "VERSION=${GITHUB_REF/refs\/tags\//}" > $GITHUB_OUTPUT
     - name: Build with Gradle
       run: |
         chmod +x gradlew
-        ./gradlew assembleRelease --build-cache --parallel --daemon --warning-mode all
+        #./gradlew assembleRelease --build-cache --parallel --daemon --warning-mode all
          rm -rf apk/
          mkdir -p apk/
          ls -al
@@ -53,6 +53,7 @@ jobs:
            APP_BUILD_APK=${file}
          done
          ls -al apk
+         echo ${{ steps.get_version.outputs.VERSION }}
          #APP_MODULE=IMEService
          #APP_BUILD_APK=$(find ${APP_MODULE}/build -regex .*/.*/release/.*.apk)
          APP_BUILD_APK=${APP_BUILD_APK/arm*}
@@ -79,8 +80,8 @@ jobs:
         #令牌的权限仅限于包含您的工作流程的仓库。 更多信息请参阅“GITHUB_TOKEN 的权限”。
         #在每个作业开始之前， GitHub 将为作业提取安装访问令牌。 令牌在作业完成后过期。
       with:
-        tag_name: ${{ steps.get_version.outputs.VERSION  }}
-        release_name: ${{ steps.get_version.outputs.VERSION  }}
+        tag_name: ${{ steps.tag.outputs.release_tag  }}
+        release_name: ${{ steps.tag.outputs.release_tag  }}
         draft: false
         prerelease: false
     # 上传至release的资源
@@ -91,7 +92,8 @@ jobs:
       with:
         tag_name: ${{ steps.get_version.outputs.VERSION }}
         name: ${{ env.APP_RELEASE_NAME }}-${{steps.get_version.outputs.VERSION }}
-        files: apk/*
+        #files: apk/*
+        files: app/libs/*
     # 存档打包的文件
     - name: Archive production artifacts
       uses: actions/upload-artifact@v4.6.0
