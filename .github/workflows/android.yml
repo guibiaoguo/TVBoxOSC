@@ -35,21 +35,33 @@ jobs:
         repository: guibiaoguo/keystore
         token: ${{ secrets.TOKEN }} # 连接仓库的token,需要单独配置
         path: keystore # 仓库的根目录名
+      # 获取apk版本号
+    - name: Get Version Name
+      uses: actions/github-script@v3
+      id: get-version
+      with:
+        script: |
+          const str=process.env.GITHUB_REF;
+          return str.substring(str.indexOf("v"));
+        result-encoding: string
     # 打包release
     - name: Build with Gradle
       run: |
         chmod +x gradlew
-        #./gradlew assembleRelease --build-cache --parallel --daemon --warning-mode all
+        ./gradlew assembleRelease --build-cache --parallel --daemon --warning-mode all
          rm -rf apk/
          mkdir -p apk/
          ls -al
          for file in `find ~ -name "*release*.apk" -print`; do
            base=$(basename "$file")
+           base=${base/.apk}
+           echo "apk/${base}_${{steps.get-version.outputs.result}}.apk"
            echo "${file}"
-           mv "$file" "apk/$base"
+           mv "$file" "apk/${base}_${{steps.get-version.outputs.result}}.apk"
            APP_BUILD_APK=${file}
          done
          ls -al apk
+         echo ${{steps.get-version.outputs.result}}
          #APP_MODULE=IMEService
          #APP_BUILD_APK=$(find ${APP_MODULE}/build -regex .*/.*/release/.*.apk)
          APP_BUILD_APK=${APP_BUILD_APK/arm*}
@@ -80,15 +92,7 @@ jobs:
     #    release_name: ${{ steps.tag.outputs.release_tag }}
     #    draft: false
     #    prerelease: false
-    # 获取apk版本号
-    - name: Get Version Name
-      uses: actions/github-script@v3
-      id: get-version
-      with:
-        script: |
-          const str=process.env.GITHUB_REF;
-          return str.substring(str.indexOf("v"));
-        result-encoding: string
+
     # 上传至release的资源
     - name: Upload App To Artifact
       uses: softprops/action-gh-release@v1
