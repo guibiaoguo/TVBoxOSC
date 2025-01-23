@@ -67,6 +67,7 @@ public class DanmuRoute {
 
     public static String route(String path) {
         try {
+            Log.d(TAG,path);
             if (path.startsWith("file")) return path;
             if (path.contains("bilibili.com"))
                 return DanmuRoute.getInstance().getBiliDanmu(path);
@@ -89,21 +90,25 @@ public class DanmuRoute {
             if (path.contains("www.bilibili.com")) {
                 String[] ids = path.split("/");
                 String epid = ids[ids.length - 1].substring(2);
-                String content = OkGo.<String>get("https://api.bilibili.com/pgc/view/web/ep/list?ep_id=" + epid).tag("youkudanmu").execute().body().string();
-                JsonArray jsonArray = gson.fromJson(content, JsonObject.class).getAsJsonObject("result").getAsJsonArray("");
+                String content = OkGo.<String>get("https://api.bilibili.com/pgc/view/web/ep/list?ep_id=" + epid).execute().body().string();
+                JsonArray jsonArray = new Gson().fromJson(content, JsonObject.class).getAsJsonObject("result").getAsJsonArray("episodes");
                 String oid = "", pid = "";
                 for (JsonElement element : jsonArray) {
-                    if (element.getAsJsonObject().get("ep_id").getAsString().equals("epid")) {
+                    if (element.getAsJsonObject().get("ep_id").getAsString().equals(epid)) {
                         oid = element.getAsJsonObject().get("cid").getAsString();
                         pid = element.getAsJsonObject().get("aid").getAsString();
                         break;
                     }
                 }
                 path = "https://api.bilibili.com/x/v2/dm/wbi/web/seg.so?oid=" + oid + "&pe=120000&pid=" + pid;
+            } else if (path.contains("api.bilibili.com")){
+                String oid = getParam(path,"oid");
+                String pid = getParam(path,"pid");
+                path = "https://api.bilibili.com/x/v2/dm/wbi/web/seg.so?oid=" + oid + "&pe=120000&pid=" + pid;
             }
             File file = FileUtils.getLocal("file://TV/danmu/bilibili_from_" + MD5.string2MD5(path) + ".xml");
             long time = System.currentTimeMillis() - file.lastModified();
-            if (file.exists() && time<3600*24*1000) {
+            if (file.exists() && time<3600*24*1000 && time > 0) {
                 return "file://TV/danmu/bilibili_from_" + MD5.string2MD5(path) + ".xml";
             }
             List<String> contentList = new ArrayList<>();
@@ -113,7 +118,7 @@ public class DanmuRoute {
             List<Request> failList = new ArrayList<>();
             while (true) {
                 List<Request> requestList = new ArrayList<>();
-                if (!flag) {
+                if (!flag && failList.size() < 5) {
                     for (i = j; i < 5 + j; i = i + 0.5) {
                         StringBuilder builder = new StringBuilder();
                         if (i < 2) {
@@ -136,15 +141,15 @@ public class DanmuRoute {
                 failList = new ArrayList<>();
                 Map<Request, byte[]> contentMap = batchFetch(requestList);
                 for (Request request : requestList) {
-                    if (contentMap.get(request) == null || contentMap.get(request).length == 0) {
+                    if (contentMap.get(request) == null && request.getFailCount() < 4) {
+                        request.setFailCount(request.getFailCount()+1);
                         failList.add(request);
                         continue;
                     }
                     String json;
                     try {
                         byte[] bytes = contentMap.get(request);
-                        BillDanmuEntity.Danmus bill = BillDanmuEntity.Danmus.parseFrom(bytes);
-                        json = JsonFormat.printer().print(bill);
+                        json = new String(bytes, StandardCharsets.UTF_8);
                     } catch (Exception e) {
                         json = "{\n}";
                     }
@@ -189,12 +194,14 @@ public class DanmuRoute {
         private HttpHeaders headers;
         private String method;
 
+        private int failCount;
 
         public Request(String url, Map<String, String> params, HttpHeaders headers, String method) {
             this.url = url;
             this.params = params;
             this.headers = headers;
             this.method = method;
+            this.failCount = 0;
         }
 
         public String getUrl() {
@@ -212,6 +219,15 @@ public class DanmuRoute {
         public String getMethod() {
             return method;
         }
+
+        public int getFailCount() {
+            return failCount;
+        }
+
+        public void setFailCount(int failCount) {
+            this.failCount = failCount;
+        }
+
     }
 
     class Responses {
@@ -245,20 +261,25 @@ public class DanmuRoute {
                 byte[] json = null;
                 try {
                     if (request.getMethod().equalsIgnoreCase("GET")) {
-                        json = OkGo.<String>get(request.getUrl()).tag("danmu")
+                        json = OkGo.<String>get(request.getUrl())
                                 .headers(request.getHeaders())
                                 .params(request.getParams()).execute().body().bytes();
                     } else if (request.getMethod().equalsIgnoreCase("POST")) {
-                        json = OkGo.<String>post(request.getUrl()).tag("danmu")
+                        json = OkGo.<String>post(request.getUrl())
                                 .headers(request.getHeaders())
                                 .params(request.getParams()).execute().body().bytes();
                     }
+                    if (request.getUrl().contains("api.bilibili.com")) {
+                        BillDanmuEntity.Danmus bill = BillDanmuEntity.Danmus.parseFrom(json);
+                        json = JsonFormat.printer().print(bill).getBytes();
+                    } else if (request.getUrl().contains("cmts.iqiyi.com")) {
+                        json = ZLibUtils.decompress(json);
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
-                    json = "".getBytes();
                 } finally {
                     long end = System.currentTimeMillis();
-                    Log.d(TAG,request.url + " 耗时" + (end-start1) + "毫秒!");
+                    Log.d(TAG,Thread.currentThread().getName() + " 第" + request.getFailCount() + "次 " +request.getUrl() + " 耗时" + (end-start1) + "毫秒!");
                 }
                 return new Responses(request, json);
             });
@@ -267,7 +288,7 @@ public class DanmuRoute {
             try {
                 Future<Responses> future = completionService.take();
                 if (future.isDone()) {
-                    Responses responses = future.get();
+                    Responses responses = future.get(10,TimeUnit.SECONDS);
                     contentMap.put(responses.getRequest(),responses.getContent());
                 }
             } catch (Exception e) {
@@ -290,7 +311,9 @@ public class DanmuRoute {
                     path = "https://cmts.iqiyi.com/bullet/" + vid.substring(vid.length() - 4, vid.length() - 2) + "/" + vid.substring(vid.length() - 2) + "/" + vid + "_300_1.z";
                 }
             }
-            if (FileUtils.getLocal("file://TV/danmu/iqiyi_from_" + MD5.string2MD5(path) + ".xml").exists()) {
+            File file = FileUtils.getLocal("file://TV/danmu/iqiyi_from_" + MD5.string2MD5(path) + ".xml");
+            long time = System.currentTimeMillis() - file.lastModified();
+            if (file.exists() && time<3600*24*1000 && time > 0) {
                 return "file://TV/danmu/iqiyi_from_" + MD5.string2MD5(path) + ".xml";
             }
             List<String> contentList = new ArrayList<>();
@@ -300,7 +323,7 @@ public class DanmuRoute {
             List<Request> failList = new ArrayList<>();
             while (true) {
                 List<Request> requestList = new ArrayList<>();
-                if (!flag) {
+                if (!flag && failList.size() < 5) {
                     for (i = j; i < 5 + j; i++) {
                         StringBuilder builder = new StringBuilder();
                         builder.append(path.replace("_1.z", "")).append("_").append(i).append(".z");
@@ -312,13 +335,13 @@ public class DanmuRoute {
                 Map<Request, byte[]> contentMap = batchFetch(requestList);
                 for (Request request : requestList) {
                     String json;
-                    if (contentMap.get(request) == null || contentMap.get(request).length == 0) {
+                    if (contentMap.get(request) == null && request.getFailCount() < 4) {
+                        request.setFailCount(request.getFailCount()+1);
                         failList.add(request);
                         continue;
                     }
                     try {
                         byte[] bytes = contentMap.get(request);
-                        bytes = ZLibUtils.decompress(bytes);
                         json = new String(bytes, StandardCharsets.UTF_8);
                     } catch (Exception e) {
                         json = "";
@@ -388,7 +411,9 @@ public class DanmuRoute {
                 JsonObject dataObject = new Gson().fromJson(content, JsonObject.class).getAsJsonObject("data");
                 path = "https://" + dataObject.get("cdn_list").getAsString().split(",")[0] + "/" + dataObject.get("cdn_version").getAsString() + "/1.json";
             }
-            if (FileUtils.getLocal("file://TV/danmu/mgtv_from_" + MD5.string2MD5(path) + ".xml").exists()) {
+            File file = FileUtils.getLocal("file://TV/danmu/mgtv_from_" + MD5.string2MD5(path) + ".xml");
+            long time = System.currentTimeMillis() - file.lastModified();
+            if (file.exists() && time<3600*24*1000 && time > 0) {
                 return "file://TV/danmu/mgtv_from_" + MD5.string2MD5(path) + ".xml";
             }
             List<String> contentList = new ArrayList<>();
@@ -398,7 +423,7 @@ public class DanmuRoute {
             List<Request> failList = new ArrayList<>();
             while (true) {
                 List<Request> requestList = new ArrayList<>();
-                if (!flag) {
+                if (!flag && failList.size() < 10) {
                     for (i = j; i < 10 + j; i++) {
                         StringBuilder builder = new StringBuilder();
                         builder.append(path.replace("/1.json", "")).append("/").append(i).append(".json");
@@ -410,7 +435,8 @@ public class DanmuRoute {
                 Map<Request, byte[]> contentMap = batchFetch(requestList);
                 for (Request request : requestList) {
                     String json;
-                    if (contentMap.get(request) == null || contentMap.get(request).length == 0) {
+                    if (contentMap.get(request) == null && request.getFailCount() < 4) {
+                        request.setFailCount(request.getFailCount()+1);
                         failList.add(request);
                         continue;
                     }
@@ -470,9 +496,11 @@ public class DanmuRoute {
             if (path.contains("v.qq.com")) {
                 String[] ids = path.split("/");
                 String vid = ids[ids.length - 1].split(".html")[0];
-                path = "https://dm.video.qq.com/barrage/segment/" + vid + "/t/v1/00000/30000";
+                path = "https://dm.video.qq.com/barrage/segment/" + vid + "/t/v1/0000/30000";
             }
-            if (FileUtils.getLocal("file://TV/danmu/qq_from_" + MD5.string2MD5(path) + ".xml").exists()) {
+            File file = FileUtils.getLocal("file://TV/danmu/qq_from_" + MD5.string2MD5(path) + ".xml");
+            long time = System.currentTimeMillis() - file.lastModified();
+            if (file.exists() && time<3600*24*1000 && time > 0) {
                 return "file://TV/danmu/qq_from_" + MD5.string2MD5(path) + ".xml";
             }
             List<String> contentList = new ArrayList<>();
@@ -482,7 +510,7 @@ public class DanmuRoute {
             List<Request> failList = new ArrayList<>();
             while (true) {
                 List<Request> requestList = new ArrayList<>();
-                if (!flag) {
+                if (!flag && failList.size() < 10) {
                     for (i = j; i < 10 + j; i++) {
                         StringBuilder builder = new StringBuilder();
                         builder.append(path.replace("0000/30000", "")).append(30000 * i).append("/").append(30000 * (i + 1));
@@ -494,7 +522,8 @@ public class DanmuRoute {
                 Map<Request, byte[]> contentMap = batchFetch(requestList);
                 for (Request request : requestList) {
                     String json;
-                    if (contentMap.get(request) == null || contentMap.get(request).length == 0) {
+                    if (contentMap.get(request) == null && request.getFailCount() < 4) {
+                        request.setFailCount(request.getFailCount()+1);
                         failList.add(request);
                         continue;
                     }
@@ -564,7 +593,9 @@ public class DanmuRoute {
     public String getYouKuDanmu(String path) {
         List<String> contentList = new ArrayList<>();
         try {
-            if (FileUtils.getLocal("file://TV/danmu/youku_from_" + MD5.string2MD5(path) + ".xml").exists()) {
+            File file = FileUtils.getLocal("file://TV/danmu/youku_from_" + MD5.string2MD5(path) + ".xml");
+            long time = System.currentTimeMillis() - file.lastModified();
+            if (file.exists() && time<3600*24*1000 && time > 0) {
                 return "file://TV/danmu/youku_from_" + MD5.string2MD5(path) + ".xml";
             }
             String[] ids = path.split("/");
@@ -583,7 +614,7 @@ public class DanmuRoute {
             List<Request> failList = new ArrayList<>();
             while (true) {
                 List<Request> requestList = new ArrayList<>();
-                if (!flag) {
+                if (!flag && failList.size() < 10) {
                     for (i = j; i < 10 + j; i++) {
                         Map<String, Object> msg = new LinkedHashMap<>();
                         msg.put("ctime", System.currentTimeMillis());
@@ -623,7 +654,8 @@ public class DanmuRoute {
                 Map<Request, byte[]> contentMap = batchFetch(requestList);
                 for (Request request : requestList) {
                     String json;
-                    if (contentMap.get(request) == null || contentMap.get(request).length == 0) {
+                    if (contentMap.get(request) == null && request.getFailCount() < 4) {
+                        request.setFailCount(request.getFailCount()+1);
                         failList.add(request);
                         continue;
                     }

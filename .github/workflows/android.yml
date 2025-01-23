@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     # 设置jdk环境为 17
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: set up JDK 17
       uses: actions/setup-java@v1
       with:
