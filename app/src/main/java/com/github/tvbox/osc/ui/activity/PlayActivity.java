@@ -1242,7 +1242,7 @@ public class PlayActivity extends BaseActivity {
                         PlayActivity.this,
                         actionCode,
                         new Intent(BROADCAST_ACTION).putExtra("action", actionCode),
-                        0);
+                PendingIntent.FLAG_UPDATE_CURRENT);
         final Icon icon = Icon.createWithResource(PlayActivity.this, iconResId);
         return (new android.app.RemoteAction(icon, title, desc, intent));
     }

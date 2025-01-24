@@ -19,6 +19,9 @@ import com.lzy.okgo.OkGo;
 import com.lzy.okgo.callback.AbsCallback;
 import com.lzy.okgo.model.HttpHeaders;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -85,18 +88,30 @@ public class DanmuRoute {
         return "";
     }
 
+    public List<String> extraJson(String xml, String tag) {
+        Pattern p = Pattern.compile("\""+tag+"\":([^,]+)", Pattern.MULTILINE);
+        List<String> data = new ArrayList<>();
+        Matcher matcher = p.matcher(xml);
+        while (matcher.find()) {
+            data.add(matcher.group(1));
+        }
+        return data;
+    }
+
     public String getBiliDanmu(String path) {
         try {
             if (path.contains("www.bilibili.com")) {
                 String[] ids = path.split("/");
                 String epid = ids[ids.length - 1].substring(2);
                 String content = OkGo.<String>get("https://api.bilibili.com/pgc/view/web/ep/list?ep_id=" + epid).execute().body().string();
-                JsonArray jsonArray = new Gson().fromJson(content, JsonObject.class).getAsJsonObject("result").getAsJsonArray("episodes");
                 String oid = "", pid = "";
-                for (JsonElement element : jsonArray) {
-                    if (element.getAsJsonObject().get("ep_id").getAsString().equals(epid)) {
-                        oid = element.getAsJsonObject().get("cid").getAsString();
-                        pid = element.getAsJsonObject().get("aid").getAsString();
+                List<String> epIds = extraJson(content,"ep_id");
+                List<String> cids = extraJson(content,"cid");
+                List<String> aids = extraJson(content,"aid");
+                for (int i = 0; i < epIds.size(); i++) {
+                    if (epIds.get(i).equals(epid)) {
+                        oid = cids.get(i);
+                        pid = aids.get(i);
                         break;
                     }
                 }
