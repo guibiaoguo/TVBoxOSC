@@ -122,7 +122,10 @@ public class DanmuRoute {
                 path = "https://api.bilibili.com/x/v2/dm/wbi/web/seg.so?oid=" + oid + "&pe=120000&pid=" + pid;
             }
             File file = FileUtils.getLocal("file://TV/danmu/bilibili_from_" + MD5.string2MD5(path) + ".xml");
-            long time = System.currentTimeMillis() - file.lastModified();
+            long time = 0;
+            if (file !=null && file.exists()) {
+                time = System.currentTimeMillis() - file.lastModified();
+            }
             if (file.exists() && time<3600*24*1000 && time > 0) {
                 return "file://TV/danmu/bilibili_from_" + MD5.string2MD5(path) + ".xml";
             }
@@ -327,7 +330,10 @@ public class DanmuRoute {
                 }
             }
             File file = FileUtils.getLocal("file://TV/danmu/iqiyi_from_" + MD5.string2MD5(path) + ".xml");
-            long time = System.currentTimeMillis() - file.lastModified();
+            long time = 0;
+            if (file !=null && file.exists()) {
+                time = System.currentTimeMillis() - file.lastModified();
+            }
             if (file.exists() && time<3600*24*1000 && time > 0) {
                 return "file://TV/danmu/iqiyi_from_" + MD5.string2MD5(path) + ".xml";
             }
@@ -427,7 +433,10 @@ public class DanmuRoute {
                 path = "https://" + dataObject.get("cdn_list").getAsString().split(",")[0] + "/" + dataObject.get("cdn_version").getAsString() + "/1.json";
             }
             File file = FileUtils.getLocal("file://TV/danmu/mgtv_from_" + MD5.string2MD5(path) + ".xml");
-            long time = System.currentTimeMillis() - file.lastModified();
+            long time = 0;
+            if (file !=null && file.exists()) {
+                time = System.currentTimeMillis() - file.lastModified();
+            }
             if (file.exists() && time<3600*24*1000 && time > 0) {
                 return "file://TV/danmu/mgtv_from_" + MD5.string2MD5(path) + ".xml";
             }
@@ -514,7 +523,10 @@ public class DanmuRoute {
                 path = "https://dm.video.qq.com/barrage/segment/" + vid + "/t/v1/0000/30000";
             }
             File file = FileUtils.getLocal("file://TV/danmu/qq_from_" + MD5.string2MD5(path) + ".xml");
-            long time = System.currentTimeMillis() - file.lastModified();
+            long time = 0;
+            if (file !=null && file.exists()) {
+                time = System.currentTimeMillis() - file.lastModified();
+            }
             if (file.exists() && time<3600*24*1000 && time > 0) {
                 return "file://TV/danmu/qq_from_" + MD5.string2MD5(path) + ".xml";
             }
@@ -609,7 +621,10 @@ public class DanmuRoute {
         List<String> contentList = new ArrayList<>();
         try {
             File file = FileUtils.getLocal("file://TV/danmu/youku_from_" + MD5.string2MD5(path) + ".xml");
-            long time = System.currentTimeMillis() - file.lastModified();
+            long time = 0;
+            if (file !=null && file.exists()) {
+                time = System.currentTimeMillis() - file.lastModified();
+            }
             if (file.exists() && time<3600*24*1000 && time > 0) {
                 return "file://TV/danmu/youku_from_" + MD5.string2MD5(path) + ".xml";
             }
