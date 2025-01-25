@@ -295,6 +295,7 @@ public class DanmuRoute {
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
+                    return new Responses(request, json);
                 } finally {
                     long end = System.currentTimeMillis();
                     Log.d(TAG,Thread.currentThread().getName() + " 第" + request.getFailCount() + "次 " +request.getUrl() + " 耗时" + (end-start1) + "毫秒!");
