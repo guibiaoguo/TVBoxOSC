@@ -306,14 +306,13 @@ public class DanmuRoute {
         for (Request request : requestList) {
             try {
                 Future<Responses> future = completionService.take();
-                if (future.isDone()) {
-                    Responses responses = future.get(10,TimeUnit.SECONDS);
-                    contentMap.put(responses.getRequest(),responses.getContent());
-                }
+                Responses responses = future.get(10,TimeUnit.SECONDS);
+                contentMap.put(responses.getRequest(),responses.getContent());
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
+        executorService.shutdown();
         long end = System.currentTimeMillis();
         Log.d(TAG,requestList.size() + "条数据耗时"+(end-start)+"毫秒");
         return contentMap;
