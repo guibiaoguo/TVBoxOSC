@@ -312,7 +312,13 @@ public class DanmuRoute {
                 e.printStackTrace();
             }
         }
-        executorService.shutdown();
+        try {
+            if (!executorService.isShutdown() && !executorService.isTerminated()) {
+                executorService.shutdownNow();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         long end = System.currentTimeMillis();
         Log.d(TAG,requestList.size() + "条数据耗时"+(end-start)+"毫秒");
         return contentMap;
