@@ -320,3 +320,4 @@
 -keepclassmembers,allowobfuscation class * { @org.simpleframework.xml.ElementList <fields>; }
 # protobuf
 -keep class com.google.protobuf.* {*;}
+-keep class com.github.tvbox.osc.player.danmu.BillDanmuEntity {*;}
