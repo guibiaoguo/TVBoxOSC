@@ -122,10 +122,10 @@ public class DanmuRoute {
                 oid = getParam(path,"oid");
                 pid = getParam(path,"pid");
                 String content = OkGo.<String>get("https://api.bilibili.com/x/web-interface/view?aid=" + pid).execute().body().string();
-                duration = new Gson().fromJson(content,JsonObject.class).getAsJsonObject("data").get("duration").getAsInt()*1000+"";
+                duration = new Gson().fromJson(content,JsonObject.class).getAsJsonObject("data").get("duration").getAsString();
                 path = "https://api.bilibili.com/x/v2/dm/wbi/web/seg.so?oid=" + oid + "&pe=120000&pid=" + pid;
             }
-            double max_mat = Math.floor(Long.parseLong(duration) / (60*1000*5)) + 1;
+            double max_mat = Long.parseLong(duration) / (60*1000*5)==0?Math.floor(Long.parseLong(duration) / (60*5)) + 1:Long.parseLong(duration) / (60*1000*5)+1;
             File file = FileUtils.getLocal("file://TV/danmu/bilibili_from_" + MD5.string2MD5(path) + ".xml");
             long time = 0;
             if (file !=null && file.exists()) {
@@ -680,11 +680,11 @@ public class DanmuRoute {
                     builder.append("<d p=\"");
                     builder.append(danmu.getPlayat() / 1000).append(",");
                     int type = 1;
-                    int color = 16777215;
+                    long color = 16777215;
                     JsonObject propertis = gson.fromJson(danmu.getPropertis(), JsonObject.class);
                     if (propertis.has("color")) {
                         type = 5;
-                        color = propertis.get("color").getAsInt();
+                        color = Long.parseLong(propertis.get("color").getAsString().replaceAll("[^\\d+]+",""));
                     }
                     builder.append(type).append(",");
                     builder.append(25).append(",");
