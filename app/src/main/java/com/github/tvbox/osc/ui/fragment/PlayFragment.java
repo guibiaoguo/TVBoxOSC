@@ -1041,7 +1041,7 @@ public class PlayFragment extends BaseLazyFragment {
 //                    danmaku = "https://raw.ixnic.net/bilibili/DanmakuFlameMaster/master/Sample/src/main/res/raw/comments.xml";
 //                    danmaku = "http://127.0.0.1:9978/file/tv/danmaku/bill.xml";
 //                    danmaku = "https://v.youku.com/v_show/id_XNjQ0NzkxMDAxNg==.html";
-                    if (TextUtils.isEmpty(danmaku) && org.apache.commons.lang3.StringUtils.containsAnyIgnoreCase(url,"bilibili.com","iqiyi.com","mgtv.com","qq.com","youku.com")) {
+                    if (org.apache.commons.lang3.StringUtils.containsAnyIgnoreCase(url,"bilibili.com","iqiyi.com","mgtv.com","qq.com","youku.com")) {
                         danmaku = url;
                     }
                     HashMap<String, String> headers = null;
