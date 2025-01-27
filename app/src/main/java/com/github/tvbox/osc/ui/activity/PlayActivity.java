@@ -1007,6 +1007,9 @@ public class PlayActivity extends BaseActivity {
                     String flag = info.optString("flag");
                     String url = info.getString("url");
                     String danmaku = info.optString("danmaku");
+                    if (org.apache.commons.lang3.StringUtils.containsAnyIgnoreCase(url,"bilibili.com","iqiyi.com","mgtv.com","qq.com","youku.com")) {
+                        danmaku = url;
+                    }
                     HashMap<String, String> headers = null;
                     webUserAgent = null;
                     webHeaderMap = null;
@@ -1032,6 +1035,7 @@ public class PlayActivity extends BaseActivity {
 
                         }
                     }
+                    checkDanmu(danmaku);
                     if (parse || jx) {
                         boolean userJxList = (playUrl.isEmpty() && ApiConfig.get().getVipParseFlags().contains(flag)) || jx;
                         initParse(flag, userJxList, playUrl, url);
@@ -1039,7 +1043,6 @@ public class PlayActivity extends BaseActivity {
                         mController.showParse(false);
                         playUrl(playUrl + url, headers);
                     }
-                    checkDanmu(danmaku);
                 } catch (Throwable th) {
                     errorWithRetry("获取播放信息错误", true);
                 }

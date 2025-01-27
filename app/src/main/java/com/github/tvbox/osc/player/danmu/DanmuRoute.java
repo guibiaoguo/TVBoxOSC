@@ -125,6 +125,7 @@ public class DanmuRoute {
                 duration = new Gson().fromJson(content,JsonObject.class).getAsJsonObject("data").get("duration").getAsString();
                 path = "https://api.bilibili.com/x/v2/dm/wbi/web/seg.so?oid=" + oid + "&pe=120000&pid=" + pid;
             }
+            Log.d(TAG,path + " 视频时长 " + duration);
             double max_mat = Long.parseLong(duration) / (60*1000*5)==0?Math.floor(Long.parseLong(duration) / (60*5)) + 1:Long.parseLong(duration) / (60*1000*5)+1;
             File file = FileUtils.getLocal("file://TV/danmu/bilibili_from_" + MD5.string2MD5(path) + ".xml");
             long time = 0;
@@ -161,15 +162,23 @@ public class DanmuRoute {
                 failList = new ArrayList<>();
                 Map<Request, byte[]> contentMap = batchFetch(requestList);
                 for (Request request : requestList) {
-                    if (contentMap.get(request) == null && request.getFailCount() < 4) {
-                        request.setFailCount(request.getFailCount()+1);
-                        failList.add(request);
-                        continue;
+                    try {
+                        if (contentMap.get(request) == null && request.getFailCount() < 4) {
+                            request.setFailCount(request.getFailCount()+1);
+                            failList.add(request);
+                            continue;
+                        }
+                        String json;
+                        byte[] bytes = contentMap.get(request);
+                        json = new String(bytes, StandardCharsets.UTF_8);
+                        contentList.add(json);
+                    } catch (Exception e) {
+                        if (!failList.get(failList.size()-1).getUrl().equals(request.getUrl())) {
+                            request.setFailCount(request.getFailCount()+1);
+                            failList.add(request);
+                        }
+                        e.printStackTrace();
                     }
-                    String json;
-                    byte[] bytes = contentMap.get(request);
-                    json = new String(bytes, StandardCharsets.UTF_8);
-                    contentList.add(json);
                 }
             }
             StringBuilder builder = new StringBuilder();
@@ -327,6 +336,7 @@ public class DanmuRoute {
                     path = "https://cmts.iqiyi.com/bullet/" + vid.substring(vid.length() - 4, vid.length() - 2) + "/" + vid.substring(vid.length() - 2) + "/" + vid + "_300_1.z";
                 }
             }
+            Log.d(TAG,path + " 视频时长 " + duration);
             double max_mat = Math.floor(Long.parseLong(duration) / (60*5)) + 1;
             File file = FileUtils.getLocal("file://TV/danmu/iqiyi_from_" + MD5.string2MD5(path) + ".xml");
             long time = 0;
@@ -351,16 +361,24 @@ public class DanmuRoute {
                 failList = new ArrayList<>();
                 Map<Request, byte[]> contentMap = batchFetch(requestList);
                 for (Request request : requestList) {
-                    String json;
-                    if (contentMap.get(request) == null && request.getFailCount() < 4) {
-                        request.setFailCount(request.getFailCount()+1);
-                        failList.add(request);
-                        continue;
-                    }
-                    byte[] bytes = contentMap.get(request);
-                    json = new String(bytes, StandardCharsets.UTF_8);
-                    if (!json.startsWith("{\"code\":\"NoSuchKey\"")) {
-                        contentList.add(json);
+                    try {
+                        if (contentMap.get(request) == null && request.getFailCount() < 4) {
+                            request.setFailCount(request.getFailCount()+1);
+                            failList.add(request);
+                            continue;
+                        }
+                        String json;
+                        byte[] bytes = contentMap.get(request);
+                        json = new String(bytes, StandardCharsets.UTF_8);
+                        if (!json.startsWith("{\"code\":\"NoSuchKey\"")) {
+                            contentList.add(json);
+                        }
+                    } catch (Exception e) {
+                        if (!failList.get(failList.size()-1).getUrl().equals(request.getUrl())) {
+                            request.setFailCount(request.getFailCount()+1);
+                            failList.add(request);
+                        }
+                        e.printStackTrace();
                     }
                 }
             }
@@ -443,23 +461,26 @@ public class DanmuRoute {
                 failList = new ArrayList<>();
                 Map<Request, byte[]> contentMap = batchFetch(requestList);
                 for (Request request : requestList) {
-                    String json;
-                    if (contentMap.get(request) == null && request.getFailCount() < 4) {
-                        request.setFailCount(request.getFailCount()+1);
-                        failList.add(request);
-                        continue;
-                    }
                     try {
+                        if (contentMap.get(request) == null && request.getFailCount() < 4) {
+                            request.setFailCount(request.getFailCount()+1);
+                            failList.add(request);
+                            continue;
+                        }
+                        String json;
                         byte[] bytes = contentMap.get(request);
                         json = new String(bytes, StandardCharsets.UTF_8);
+                        if (json.contains("<Code>NoSuchKey</Code>")) {
+                            flag = true;
+                        } else {
+                            contentList.add(json);
+                        }
                     } catch (Exception e) {
-                        json = "";
+                        if (!failList.get(failList.size()-1).getUrl().equals(request.getUrl())) {
+                            request.setFailCount(request.getFailCount()+1);
+                            failList.add(request);
+                        }
                         e.printStackTrace();
-                    }
-                    if (json.contains("<Code>NoSuchKey</Code>")) {
-                        flag = true;
-                    } else {
-                        contentList.add(json);
                     }
                 }
                 if (flag && failList.isEmpty()) {
@@ -536,16 +557,24 @@ public class DanmuRoute {
                 failList = new ArrayList<>();
                 Map<Request, byte[]> contentMap = batchFetch(requestList);
                 for (Request request : requestList) {
-                    String json;
-                    if (contentMap.get(request) == null && request.getFailCount() < 4) {
-                        request.setFailCount(request.getFailCount()+1);
-                        failList.add(request);
-                        continue;
-                    }
-                    byte[] bytes = contentMap.get(request);
-                    json = new String(bytes, StandardCharsets.UTF_8);
-                    if (!json.startsWith("{\"barrage_list\":[]}")) {
-                        contentList.add(json);
+                    try {
+                        if (contentMap.get(request) == null && request.getFailCount() < 4) {
+                            request.setFailCount(request.getFailCount()+1);
+                            failList.add(request);
+                            continue;
+                        }
+                        String json;
+                        byte[] bytes = contentMap.get(request);
+                        json = new String(bytes, StandardCharsets.UTF_8);
+                        if (!json.startsWith("{\"barrage_list\":[]}")) {
+                            contentList.add(json);
+                        }
+                    } catch (Exception e) {
+                        if (!failList.get(failList.size()-1).getUrl().equals(request.getUrl())) {
+                            request.setFailCount(request.getFailCount()+1);
+                            failList.add(request);
+                        }
+                        e.printStackTrace();
                     }
                 }
             }
@@ -614,6 +643,7 @@ public class DanmuRoute {
             String url = "https://openapi.youku.com/v2/videos/show.json?client_id=53e6cc67237fc59a&video_id=" + vid + "&package=com.huawei.hwvplayer.youku&ext=show";
             String content = OkGo.<String>get(url).tag("youkudanmu").execute().body().string();
             double duration = new Gson().fromJson(content, JsonObject.class).get("duration").getAsDouble();
+            Log.d(TAG,path + " 视频时长 " + duration);
             double max_mat = Math.floor(duration / 60) + 1;
             boolean flag = false;
             int j = 1;
@@ -658,16 +688,24 @@ public class DanmuRoute {
                 failList = new ArrayList<>();
                 Map<Request, byte[]> contentMap = batchFetch(requestList);
                 for (Request request : requestList) {
-                    String json;
-                    if (contentMap.get(request) == null && request.getFailCount() < 4) {
-                        request.setFailCount(request.getFailCount()+1);
-                        failList.add(request);
-                        continue;
-                    }
-                    byte[] bytes = contentMap.get(request);
-                    json = new String(bytes, StandardCharsets.UTF_8);
-                    if (!json.startsWith("{\"code\":\"NoSuchKey\"")) {
-                        contentList.add(json);
+                    try {
+                        if (contentMap.get(request) == null && request.getFailCount() < 4) {
+                            request.setFailCount(request.getFailCount()+1);
+                            failList.add(request);
+                            continue;
+                        }
+                        String json;
+                        byte[] bytes = contentMap.get(request);
+                        json = new String(bytes, StandardCharsets.UTF_8);
+                        if (!json.startsWith("{\"code\":\"NoSuchKey\"")) {
+                            contentList.add(json);
+                        }
+                    } catch (Exception e) {
+                        if (!failList.get(failList.size()-1).getUrl().equals(request.getUrl())) {
+                            request.setFailCount(request.getFailCount()+1);
+                            failList.add(request);
+                        }
+                        e.printStackTrace();
                     }
                 }
             }

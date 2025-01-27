@@ -211,6 +211,8 @@ public class PlayFragment extends BaseLazyFragment {
                 App.post(()->{
                     if(mVideoView!=null && mVideoView.isPlaying()){
                         mDanmuView.seekTo(mVideoView.getCurrentPosition());
+                    } else {
+                        mDanmuView.seekTo(0L);
                     }
                 });
             });
